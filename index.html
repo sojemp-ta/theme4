@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Theme 4 Early Intervention</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f4f6;--card:#ffffff;--ink:#1f2937;--muted:#5b6472;--line:#d6d9de;--accent:#1f4e9a;--accent-ink:#ffffff;--soft:#eaf0fa;--err:#b42318;--errbg:#fdecea;--ok:#146c2e;--okbg:#e6f4ea;--warnbg:#fff7e0}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111418;--card:#1b1f25;--ink:#e6e8eb;--muted:#a3abb7;--line:#353b44;--accent:#7aa5ec;--accent-ink:#0b1220;--soft:#1f2a3c;--err:#ff8a80;--errbg:#3a1d1b;--ok:#7fd49b;--okbg:#15301f;--warnbg:#3a3215}}
+:root[data-theme="dark"]{--bg:#111418;--card:#1b1f25;--ink:#e6e8eb;--muted:#a3abb7;--line:#353b44;--accent:#7aa5ec;--accent-ink:#0b1220;--soft:#1f2a3c;--err:#ff8a80;--errbg:#3a1d1b;--ok:#7fd49b;--okbg:#15301f;--warnbg:#3a3215}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Noto Sans","Noto Sans Devanagari",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin:0 0 14px}
+.top{border-top:6px solid var(--accent)}
+h1{font-size:1.35rem;margin:0 0 8px;line-height:1.35}
+h2{font-size:1.12rem;margin:0 0 6px;line-height:1.4}
+h3{font-size:1rem;margin:4px 0 4px;color:var(--accent)}
+.muted{color:var(--muted);font-size:.92rem;white-space:pre-line}
+.q{margin:0;min-width:0}
+.q label.t{display:block;font-weight:600;margin-bottom:6px;white-space:pre-line}
+.req{color:var(--err);margin-left:2px}
+.help{color:var(--muted);font-size:.88rem;margin:-2px 0 8px;white-space:pre-line}
+input[type=text],input[type=email],textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:10px}
+textarea{min-height:110px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:6px;margin:6px 0;cursor:pointer}
+.opt input{margin-top:4px;flex:none;width:18px;height:18px}
+.opt:hover{background:var(--soft)}
+.grid{width:100%;border-collapse:collapse;font-size:.9rem}
+.grid th,.grid td{border:1px solid var(--line);padding:6px;text-align:center}
+.grid td:first-child,.grid th:first-child{text-align:left}
+.gridwrap{overflow-x:auto}
+.err{display:none;color:var(--err);font-size:.88rem;margin-top:6px}
+.q.bad .err{display:block}
+.q.bad{background:var(--errbg);margin:-8px;padding:8px;border-radius:8px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+button{font:inherit;font-weight:600;border-radius:6px;padding:10px 18px;border:1px solid var(--accent);cursor:pointer}
+.pri{background:var(--accent);color:var(--accent-ink)}
+.sec{background:transparent;color:var(--accent)}
+button:disabled{opacity:.55;cursor:wait}
+.prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:12px}
+.prog i{display:block;height:100%;background:var(--accent);width:0}
+.choose{display:grid;gap:12px}
+.choose button{text-align:left;padding:16px;background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.choose button:hover{border-color:var(--accent);background:var(--soft)}
+.choose b{display:block;color:var(--accent);margin-bottom:4px}
+.note{background:var(--warnbg);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.okbox{background:var(--okbg);color:var(--ok);border-radius:8px;padding:12px;font-weight:600}
+.rev dt{font-weight:600;margin-top:10px;font-size:.9rem}
+.rev dd{margin:2px 0 0;white-space:pre-wrap;font-size:.92rem}
+.rev h3{margin-top:18px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.hp{position:absolute;left:-9999px}
+.small{font-size:.85rem}
+@media (max-width:560px){.card{padding:14px}h1{font-size:1.15rem}.bar button{flex:1}}
+@media print{body{background:#fff;color:#000}.noprint{display:none!important}.card{border:none;padding:0}}
+.mode{display:grid;gap:8px;margin-top:6px}
+.tools{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:.85rem}
+.tools select{width:auto;padding:5px 8px;font-size:.85rem}
+.ib{display:inline-flex;gap:6px;margin-left:6px;vertical-align:middle}
+.ib button{padding:2px 8px;font-size:.8rem;border-radius:14px;font-weight:600}
+.ib button.on{background:var(--err);border-color:var(--err);color:#fff}
+.interim{font-size:.85rem;color:var(--muted);font-style:italic;min-height:1em;margin-top:4px}
+.tip{background:var(--warnbg);border-radius:6px;padding:8px 10px;font-size:.85rem;margin-top:6px}
+.step{display:flex;gap:10px;align-items:flex-start}.step b.n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:inline-flex;align-items:center;justify-content:center}
+.plan{margin:8px 0 0;padding-left:20px}.plan li{margin:2px 0}.plan .now{font-weight:700}.plan .ok{color:var(--ok)}
+.lock{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--soft);border-radius:6px;padding:10px 12px}
+.inv{background:var(--soft);border-radius:8px;padding:10px 12px;font-size:.92rem;margin-top:10px}
+.docs{margin:6px 0 12px;padding-left:18px;font-size:.9rem}
+.docs li{margin:3px 0}
+.flist{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px}
+.flist li{min-width:0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:.88rem}
+.flist .nm{flex:1 1 180px;min-width:0;overflow-wrap:anywhere}
+.flist select{flex:1 1 200px;width:auto;min-width:0;max-width:100%;padding:6px;font-size:.85rem}
+.flist .st{font-size:.8rem;color:var(--muted)}
+.flist .st.ok{color:var(--ok)}.flist .st.bad{color:var(--err)}
+.x{padding:4px 10px;font-size:.8rem}
+.upl{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.upl label{display:inline-block;max-width:100%;border:1px dashed var(--accent);color:var(--accent);border-radius:6px;padding:10px 14px;cursor:pointer;font-weight:600}
+.upl input{position:absolute;left:-9999px}
+.blank .bq{margin:0 0 14px;break-inside:avoid}
+.blank .bq b{display:block;white-space:pre-line}
+.blank .ln{border-bottom:1px solid #999;height:26px}
+.blank .bo{margin:2px 0 0 4px}
+.blank h2{margin-top:22px;border-bottom:2px solid var(--ink);padding-bottom:4px}
+@media print{.blank .ln{border-color:#000}.blank h2{break-after:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+var SPEC = /*SPEC*/null;
+var BOOT = /*BOOT*/null;
+var START = /*START*/'';
+var API_URL = 'https://script.google.com/macros/s/AKfycbwW66ar5YmQE78XMANoEDAed1VY5CRuJQR5DCL2KzJ59DpEakE1sEycBPw4l-W4-XaB9g/exec';
+var LIVE = (typeof google !== 'undefined' && google.script && google.script.run) || !!API_URL;
+function rpc(fn,arg){ return new Promise(function(res,rej){
+  if(typeof google!=='undefined'&&google.script&&google.script.run){ google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](arg); return; }
+  if(API_URL){ fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,arg:arg})})
+    .then(function(r){return r.json();}).then(function(j){ if(j.error) rej(new Error(j.error)); else res(j.result); }).catch(rej); return; }
+  rej(new Error('preview')); }); }
+var FORMS = {S:0, D:1, P:2};
+var S = {};
+var app = document.getElementById('app');
+var MODE_TXT = {online:'Type the answers in this form / इस फ़ॉर्म में उत्तर टाइप करें', handwritten:'Write by hand on the printed questionnaire and upload photographs or a scan / मुद्रित प्रश्नावली पर हाथ से लिखकर फोटो या स्कैन अपलोड करें'};
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function F(){return SPEC.forms[FORMS[S.key]];}
+function store(k,v){try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function load(k){try{ var v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){return null;} }
+function dkey(){return 't4draft_'+S.key+(BOOT.invitee?'_'+BOOT.invitee.id+'_'+(S.task||0):'');}
+var saveT; function autosave(){clearTimeout(saveT); saveT=setTimeout(function(){ if(!S.done) store(dkey(),{page:S.page,hist:S.hist,ans:S.ans,mode:S.mode,at:Date.now()}); },400);}
+function sid(){var a='abcdefghijklmnopqrstuvwxyz0123456789',s='';for(var i=0;i<24;i++)s+=a[Math.floor(Math.random()*36)];return s;}
+function findTitle(t){var f=F();for(var p=0;p<f.pages.length;p++)for(var i=0;i<f.pages[p].items.length;i++)if(f.pages[p].items[i].title===t)return f.pages[p].items[i];}
+function findItem(id){var f=F();for(var p=0;p<f.pages.length;p++)for(var i=0;i<f.pages[p].items.length;i++)if(f.pages[p].items[i].id===id)return f.pages[p].items[i];}
+
+function landing(){
+  app.innerHTML = '<div class="card top"><h1>Theme 4 — Early Intervention and Reduction of Disability Burden<br>विषय 4 — प्रारंभिक हस्तक्षेप एवं दिव्यांगता भार में कमी</h1>'+
+  '<p class="muted">Social Justice and Empowerment of Persons with Disabilities Department, Government of Madhya Pradesh · Departmental Summit, MoSJE, October 2026. Last date: '+esc(BOOT.config.deadline)+'.</p></div>'+
+  '<div class="card"><h2>Choose your form / अपना प्रपत्र चुनें</h2><div class="choose">'+
+  '<button onclick="start(\'S\')"><b>Format S — State-level officials</b>प्रारूप S — राज्य स्तरीय अधिकारी</button>'+
+  '<button onclick="start(\'D\')"><b>Format D — District-level officials</b>प्रारूप D — जिला स्तरीय अधिकारी</button>'+
+  '<button onclick="start(\'P\')"><b>Partner input sheet — NGOs, hospitals and other organisations</b>भागीदार इनपुट शीट — स्वयंसेवी संस्थाएँ, अस्पताल एवं अन्य संगठन</button>'+
+  '</div></div>'+(LIVE?'':'<div class="card note noprint">Preview copy: answers and files are not sent anywhere. / पूर्वावलोकन प्रति: उत्तर एवं फ़ाइलें कहीं नहीं भेजी जातीं।</div>');
+}
+
+function prefill(){
+  var inv=BOOT.invitee, fl=BOOT.fields[S.key]; if(!inv) return;
+  function put(title,val){ var it=title&&findTitle(title); if(!it||!val||S.ans[it.id]) return;
+    if(it.type==='LIST'){ if(it.choices.indexOf(val)>-1) S.ans[it.id]=val; } else S.ans[it.id]=val; }
+  if(S.key==='P'){ put(fl.name,inv.unit); put(fl.district,inv.district); }
+  else { put(fl.name,inv.name); put(fl.unit,inv.unit); }
+  put(fl.desig,inv.desig); put(fl.email,inv.email);
+}
+function guided(){return !!(BOOT.invitee && BOOT.invitee.form===S.key && BOOT.invitee.plan && BOOT.invitee.plan.length);}
+function task(){return guided()?BOOT.invitee.plan[S.task]:null;}
+function routerItem(title){return title?findTitle(title):null;}
+function applyTask(){ var t=task(); S.locked={}; if(!t) return; var R=BOOT.invitee.routers;
+  var ti=routerItem(R.type); if(ti&&t.type){S.ans[ti.id]=t.type;S.locked[ti.id]=true;}
+  var si=routerItem(R.section); if(si){ if(t.section){S.ans[si.id]=t.section;S.locked[si.id]=true;} else delete S.ans[si.id]; } }
+function unlock(){S.locked={};S.unlocked=true;render(true);}
+function firstPending(){ if(!guided()) return 0; var got=(BOOT.invitee.received||[]).slice(), pl=BOOT.invitee.plan;
+  for(var i=0;i<pl.length;i++){var j=got.indexOf(pl[i].part); if(j>-1){got.splice(j,1);pl[i].doneBefore=true;} else return i;} return 0; }
+function start(k,keep){
+  var prev=S||{};
+  S={key:k,page:0,hist:[],ans:{},mode:null,done:false,sid:sid(),files:[],voice:{},task:0,locked:{},unlocked:false,sent:prev.key===k?(prev.sent||[]):[]};
+  if(keep){ S.task=keep.task; S.ans=keep.ans; S.mode=keep.mode; } else if(guided()) S.task=firstPending();
+  var d=load(dkey());
+  if(d && d.ans && Object.keys(d.ans).length){
+    if(confirm('A saved draft of this form was found on this device. Continue from it?\nइस उपकरण पर इस प्रपत्र का सहेजा गया मसौदा मिला है। क्या आप वहीं से जारी रखना चाहेंगे?')){
+      S.page=d.page||0;S.hist=d.hist||[];S.ans=d.ans;S.mode=d.mode||null; if(S.page==='REVIEW'){S.page=S.hist.pop()||0;}
+    } else store(dkey(),null);
+  }
+  prefill(); applyTask(); render();
+}
+
+function planHtml(){ var inv=BOOT.invitee, pl=inv.plan;
+  return '<div class="inv">Personal link for / व्यक्तिगत लिंक: <b>'+esc([inv.name,inv.desig,inv.unit].filter(String).join(', '))+'</b>'+
+    '<div class="small" style="margin-top:6px">Requested from you / आपसे अपेक्षित:</div><ol class="plan small">'+pl.map(function(t,i){
+      var ok=t.doneBefore||S.sent.indexOf(i)>-1, now=i===S.task&&!ok;
+      return '<li class="'+(ok?'ok':now?'now':'')+'">'+esc(t.label)+(ok?' — ✓ received / प्राप्त':now?' — now / अभी':'')+'</li>';}).join('')+'</ol>'+
+    (pl.length>1?'<div class="small muted">Each part is submitted separately; after one is submitted the form opens the next. / प्रत्येक भाग अलग से जमा होगा।</div>':'')+'</div>'; }
+function hidden(it){ return S.mode==='handwritten' && S.page===0 && it.type==='PARA'; }
+function required(it){ return it.req && !(S.mode==='handwritten' && it.type==='PARA'); }
+function itemHtml(it){
+  if(hidden(it)) return '';
+  if(it.type==='HDR') return '<div class="q"><h3>'+esc(it.title)+'</h3>'+(it.help?'<div class="help">'+esc(it.help)+'</div>':'')+'</div>';
+  var v=S.ans[it.id], id=it.id, h='<div class="q" id="w_'+id+'">';
+  if(S.locked[id]) return h+'<label class="t">'+esc(it.title)+'</label><div class="lock"><span>✓ <b>'+esc(v)+'</b><br><span class="small muted">Selected from your invitation / आपके आमंत्रण के अनुसार चयनित</span></span>'+
+    '<button class="sec x" onclick="unlock()">Change / बदलें</button></div></div>';
+  var canMic=(it.type==='PARA'||(it.type==='TEXT'&&!/e-mail|ईमेल/i.test(it.title)));
+  h+='<label class="t" for="'+id+'">'+esc(it.title)+(required(it)?'<span class="req" aria-label="required">*</span>':'')+
+    '<span class="ib noprint"><button type="button" class="sec" title="Listen / सुनें" aria-label="Read this question aloud" onclick="speakItem(\''+id+'\')">🔊</button>'+
+    (canMic?'<button type="button" class="sec" id="mic_'+id+'" title="Speak your answer / बोलकर उत्तर दें" aria-label="Dictate answer" onclick="dictate(\''+id+'\')">🎤</button>':'')+'</span></label>';
+  if(it.help) h+='<div class="help">'+esc(it.help)+'</div>';
+  if(it.type==='TEXT'){
+    var em=/e-mail|ईमेल/i.test(it.title);
+    h+='<input id="'+id+'" type="'+(em?'email':'text')+'"'+(it.pattern?' inputmode="decimal" placeholder="Number, or NH / NA"':'')+' maxlength="2000" value="'+esc(v||'')+'" oninput="setA(\''+id+'\',this.value)">';
+  } else if(it.type==='PARA'){
+    h+='<textarea id="'+id+'" maxlength="20000" oninput="setA(\''+id+'\',this.value)">'+esc(v||'')+'</textarea>';
+  } else if(it.type==='LIST'){
+    h+='<select id="'+id+'" onchange="setA(\''+id+'\',this.value)"><option value="">Choose / चुनें</option>'+
+      it.choices.map(function(c){return '<option'+(c===v?' selected':'')+'>'+esc(c)+'</option>';}).join('')+'</select>';
+  } else if(it.type==='MC'||it.type==='CB'){
+    var multi=it.type==='CB', arr=multi?(v||[]):null;
+    h+=it.choices.map(function(c,i){
+      var on=multi?arr.indexOf(c)>-1:c===v;
+      return '<label class="opt"><input type="'+(multi?'checkbox':'radio')+'" name="'+id+'" '+(on?'checked ':'')+'onchange="pick(\''+id+'\','+i+','+multi+',this.checked)"><span>'+esc(c)+'</span></label>';
+    }).join('');
+  } else if(it.type==='GRID'){
+    var g=v||{};
+    h+='<div class="gridwrap"><table class="grid"><tr><th></th>'+it.cols.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'</tr>'+
+      it.rows.map(function(r,ri){return '<tr><td>'+esc(r)+'</td>'+it.cols.map(function(c,ci){
+        return '<td><input type="radio" aria-label="'+esc(r+' — '+c)+'" name="'+id+'_'+ri+'" '+(g[r]===c?'checked ':'')+'onchange="gridPick(\''+id+'\','+ri+','+ci+')"></td>';}).join('')+'</tr>';}).join('')+'</table></div>';
+  }
+  if(canMic) h+='<div class="interim" id="int_'+id+'"></div>';
+  h+='<div class="err" id="e_'+id+'"></div></div>';
+  return h;
+}
+function setA(id,v){S.ans[id]=v;clearErr(id);autosave();}
+function pick(id,i,multi,on){var it=findItem(id),c=it.choices[i];
+  if(multi){var a=(S.ans[id]||[]).filter(function(x){return x!==c;}); if(on)a.push(c); S.ans[id]=a;} else S.ans[id]=c; clearErr(id);autosave();}
+function gridPick(id,ri,ci){var it=findItem(id),g=S.ans[id]||{}; g[it.rows[ri]]=it.cols[ci]; S.ans[id]=g; clearErr(id);autosave();}
+function clearErr(id){var w=document.getElementById('w_'+id); if(w) w.classList.remove('bad');}
+function setMode(m){S.mode=m; var w=document.getElementById('w_mode'); autosave(); render(true);}
+
+function modeHtml(){
+  var h='<div class="q" id="w_mode"><label class="t">How will you respond? / आप उत्तर कैसे देंगे?<span class="req">*</span></label><div class="mode">';
+  ['online','handwritten'].forEach(function(m){h+='<label class="opt"><input type="radio" name="mode" '+(S.mode===m?'checked ':'')+'onchange="setMode(\''+m+'\')"><span>'+esc(MODE_TXT[m])+'</span></label>';});
+  h+='</div><div class="err">Please choose one. / कृपया एक विकल्प चुनें।</div>';
+  if(S.mode==='handwritten') h+='<div class="note" style="margin-top:10px">1. Fill your details and choose your part on this page'+(F().pages.some(function(p,i){return i>0&&routerPage(i);})?' (and your section on the next screen)':'')+'. 2. You then get a PDF with only your questions, your details and a code. 3. Print it, write and sign, and upload photographs or a scan at the same link. / '+
+    '1. इस पृष्ठ पर विवरण भरें एवं भाग चुनें। 2. फिर आपको केवल आपके प्रश्नों वाला PDF मिलेगा। 3. प्रिंट कर हाथ से लिखें, हस्ताक्षर करें और उसी लिंक पर फोटो/स्कैन अपलोड करें।</div>';
+  return h+'</div>';
+}
+function render(keepScroll){
+  var f=F(), p=f.pages[S.page], first=S.page===0, inv=BOOT.invitee;
+  var pct=Math.round(100*(S.hist.length)/(S.hist.length+estRemaining()));
+  var h='<div class="card top"><h1>'+esc(f.title)+'</h1>'+(first?'<p class="muted">'+esc(f.desc)+'</p>':'')+
+    (first&&guided()?planHtml():'')+
+    '<div class="prog noprint" aria-hidden="true"><i style="width:'+pct+'%"></i></div></div>';
+  h+=toolsHtml();
+  if(first) h+='<div class="card">'+modeHtml()+'</div>';
+  if(S.intro&&S.intro.help) h+='<div class="card"><h2>'+esc(S.intro.title)+'</h2><p class="muted">'+esc(S.intro.help)+'</p></div>';
+  if(p.title) h+='<div class="card"><h2>'+esc(p.title)+'</h2>'+(p.help?'<p class="muted">'+esc(p.help)+'</p>':'')+'</div>';
+  h+='<div class="card" style="display:grid;gap:22px">'+p.items.map(itemHtml).join('')+'</div>';
+  h+='<input class="hp" tabindex="-1" autocomplete="off" id="hp" aria-hidden="true">';
+  h+='<div class="card bar noprint"><div>'+(S.hist.length?'<button class="sec" onclick="back()">← Back / पीछे</button>':(START?'':'<button class="sec" onclick="landing()">← Forms / प्रपत्र</button>'))+'</div>'+
+    '<div class="small muted">Draft saved on this device / मसौदा इस उपकरण पर सहेजा गया</div>'+
+    '<button class="pri" onclick="next()">'+(isLast()?'Next: documents / आगे: दस्तावेज़ →':'Next / आगे →')+'</button></div>';
+  var y=window.scrollY; app.innerHTML=h; window.scrollTo(0,keepScroll?y:0);
+}
+function skippable(pi){ if(typeof pi!=='number') return false; var its=F().pages[pi].items.filter(function(i){return i.type!=='HDR';});
+  return its.length>0 && its.every(function(i){return S.locked[i.id];}); }
+function routerPage(pi){ if(typeof pi!=='number') return false; var its=F().pages[pi].items.filter(function(i){return i.type!=='HDR';});
+  return its.length>0 && its.every(function(i){return i.nav;}); }
+function nextOf(pi){
+  if(S.mode==='handwritten'){ var n=typedNext(pi), g=0; while(typeof n==='number' && !routerPage(n) && g++<30) n=typedNext(n); return n; }
+  return typedNext(pi); }
+function route(){ var pages=[0], pi=0, g=0; while(g++<30){ var n=typedNext(pi); if(n==='SUBMIT'||n==null) return n==null?null:pages; pages.push(n); pi=n; } return pages; }
+function typedNext(pi){
+  var p=F().pages[pi];
+  for(var i=0;i<p.items.length;i++){var it=p.items[i]; if(it.nav){var k=it.choices.indexOf(S.ans[it.id]); return k>-1?it.nav[k]:null;}}
+  return p.next;}
+function isLast(){return nextOf(S.page)==='SUBMIT';}
+function estRemaining(){var n=0,pi=S.page,g=0; while(pi!=='SUBMIT'&&pi!=null&&g++<30){if(!skippable(pi))n++;pi=nextOf(pi);} return Math.max(n,1);}
+
+function validate(){
+  var p=F().pages[S.page], bad=null;
+  if(S.page===0 && !S.mode){bad=document.getElementById('w_mode'); bad.classList.add('bad');}
+  p.items.forEach(function(it){ if(!it.id||hidden(it)) return; var v=S.ans[it.id], msg='';
+    var empty = v==null || v==='' || (Array.isArray(v)&&!v.length) || (it.type==='GRID'&&Object.keys(v||{}).length<it.rows.length);
+    if(required(it) && empty) msg = it.type==='GRID'?'Please rate every row. / कृपया प्रत्येक पंक्ति का आकलन करें।':'This question is required. / यह प्रश्न अनिवार्य है।';
+    else if(!empty && it.pattern && !(new RegExp(it.pattern)).test(v)) msg='Enter a number, or NH (not held) / NA (not applicable). / कोई संख्या, या NH / NA लिखें।';
+    else if(!empty && it.type==='TEXT' && /e-mail|ईमेल/i.test(it.title) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) msg='Enter a valid e-mail address. / मान्य ईमेल पता लिखें।';
+    if(msg){var w=document.getElementById('w_'+it.id); w.classList.add('bad'); document.getElementById('e_'+it.id).textContent=msg; if(!bad)bad=w;}
+  });
+  if(bad){bad.scrollIntoView({behavior:'smooth',block:'center'}); var el=bad.querySelector('input,textarea,select'); if(el)el.focus({preventScroll:true});}
+  return !bad;
+}
+function next(){ if(!validate()) return; var n=nextOf(S.page); S.hist.push(S.page); S.intro=null;
+  while(skippable(n)){ S.hist.push(n); S.intro=F().pages[n]; n=nextOf(n); }
+  if(n==='SUBMIT'){ S.page='REVIEW'; autosave(); review(); return; }
+  S.page=n; autosave(); render(); }
+function back(){ S.page=S.hist.pop(); while(skippable(S.page)&&S.hist.length) S.page=S.hist.pop(); S.intro=null; autosave(); render(); }
+
+// ---- Blank printable questionnaire --------------------------------------------------------------
+function blank(){
+  var f=F(), h='<div class="card noprint bar"><button class="sec" onclick="render()">← Back to the form / फ़ॉर्म पर लौटें</button><button class="pri" onclick="window.print()">Print / प्रिंट करें</button></div>'+
+    '<div class="card blank"><h1>'+esc(f.title)+'</h1><p class="muted">'+esc(f.desc)+'</p>'+
+    '<p class="small">Answer only the part and section that apply to you. Write clearly; sign and date the last page. / केवल अपने से संबंधित भाग/खंड भरें। स्पष्ट लिखें; अंतिम पृष्ठ पर हस्ताक्षर एवं दिनांक अंकित करें।</p>';
+  f.pages.forEach(function(p,pi){
+    h+='<h2>'+esc(p.title||'Officer details / अधिकारी का विवरण')+'</h2>'+(p.help?'<p class="small muted">'+esc(p.help)+'</p>':'');
+    p.items.forEach(function(it){
+      if(it.type==='HDR'){h+='<h3>'+esc(it.title)+'</h3>';return;}
+      if(it.type==='MC'&&it.nav) { h+='<div class="bq"><b>'+esc(it.title)+'</b>'+it.choices.map(function(c){return '<div class="bo">☐ '+esc(c)+'</div>';}).join('')+'</div>'; return; }
+      h+='<div class="bq"><b>'+esc(it.title)+'</b>'+(it.help?'<div class="small muted">'+esc(it.help)+'</div>':'');
+      if(it.type==='TEXT') h+='<div class="ln"></div>';
+      else if(it.type==='PARA') h+='<div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div>';
+      else if(it.type==='GRID') h+='<div class="gridwrap"><table class="grid"><tr><th></th>'+it.cols.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'</tr>'+it.rows.map(function(r){return '<tr><td>'+esc(r)+'</td>'+it.cols.map(function(){return '<td>☐</td>';}).join('')+'</tr>';}).join('')+'</table></div>';
+      else if(it.choices && it.choices.length>20) h+='<div class="ln"></div>';
+      else if(it.choices) h+=it.choices.map(function(c){return '<div class="bo">☐ '+esc(c)+'</div>';}).join('');
+      h+='</div>';
+    });
+  });
+  h+='<h2>Signature / हस्ताक्षर</h2><div class="bq"><b>Name, designation, signature and date / नाम, पदनाम, हस्ताक्षर एवं दिनांक</b><div class="ln"></div><div class="ln"></div></div></div>';
+  app.innerHTML=h; window.scrollTo(0,0);
+}
+
+// ---- Read aloud and voice dictation -------------------------------------------------------------
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition, REC=null, RECID=null;
+function prefs(){ var p=load('t4voice')||{}; return {rl:p.rl||'en', dl:p.dl||'en'}; }
+function setPref(k,v){ var p=prefs(); p[k]=v; store('t4voice',p); }
+function toolsHtml(){ var p=prefs();
+  return '<div class="card noprint tools"><span>🔊 <b>Read aloud / सुनें:</b> <select aria-label="Reading language" onchange="setPref(\'rl\',this.value)">'+
+    [['en','English'],['hi','हिन्दी'],['both','English + हिन्दी']].map(function(o){return '<option value="'+o[0]+'"'+(p.rl===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'+
+    ' <button type="button" class="sec x" onclick="speakPage()">Read this page / पृष्ठ सुनें</button> <button type="button" class="sec x" onclick="stopSpeak()">Stop / रोकें</button></span>'+
+    '<span>🎤 <b>Speak answers in / बोलने की भाषा:</b> <select aria-label="Dictation language" onchange="setPref(\'dl\',this.value)">'+
+    [['en','English'],['hi','हिन्दी']].map(function(o){return '<option value="'+o[0]+'"'+(p.dl===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></span>'+
+    '<span class="muted small">Press 🔊 to hear a question and 🎤 to speak your answer, then check the text. / 🔊 दबाकर प्रश्न सुनें, 🎤 दबाकर उत्तर बोलें, फिर लिखित पाठ जाँच लें।</span></div>';
+}
+function voices(){ try{return window.speechSynthesis?speechSynthesis.getVoices():[];}catch(e){return [];} }
+function pickVoice(lang){ var v=voices();
+  var exact=v.filter(function(x){return x.lang&&x.lang.toLowerCase().indexOf(lang==='hi'?'hi':'en-in')===0;})[0];
+  return exact||(lang==='en'?v.filter(function(x){return /^en/i.test(x.lang);})[0]:null)||null; }
+function splitLang(t){ var en=[],hi=[]; String(t).split(/ \/ /).forEach(function(c){ (/[ऀ-ॿ]/.test(c)?hi:en).push(c); }); return {en:en.join('. '),hi:hi.join('. ')}; }
+function say(text,lang){ if(!text) return; var u=new SpeechSynthesisUtterance(text), v=pickVoice(lang); u.lang=lang==='hi'?'hi-IN':'en-IN'; if(v)u.voice=v; u.rate=0.95; speechSynthesis.speak(u); }
+function speakText(t){
+  if(!window.speechSynthesis){ return toastMsg('Reading aloud is not supported in this browser. / इस ब्राउज़र में पढ़कर सुनाना उपलब्ध नहीं है।'); }
+  var p=prefs(), x=splitLang(t), wantHi=p.rl!=='en', wantEn=p.rl!=='hi';
+  if(wantHi && x.hi && voices().length && !pickVoice('hi')){ toastMsg('No Hindi voice on this device, so reading in English. / इस उपकरण पर हिन्दी आवाज़ उपलब्ध नहीं।'); wantEn=true; wantHi=false; }
+  if(wantEn) say(x.en||t,'en'); if(wantHi) say(x.hi,'hi');
+}
+function stopSpeak(){ try{speechSynthesis.cancel();}catch(e){} }
+function itemSpeech(it){ var t=it.title+(it.help?'. '+it.help:'');
+  if(S.locked[it.id]) return t+'. '+S.ans[it.id];
+  if(it.choices&&it.choices.length<=8) t+='. Options / विकल्प: '+it.choices.join('; ');
+  return t; }
+function speakItem(id){ stopSpeak(); speakText(itemSpeech(findItem(id))); }
+function speakPage(){ stopSpeak(); var p=F().pages[S.page]; if(p.title) speakText(p.title);
+  p.items.forEach(function(it){ if(!hidden(it)) speakText(it.type==='HDR'?it.title:itemSpeech(it)); }); }
+function toastMsg(m){ var t=document.getElementById('toastF');
+  if(!t){t=document.createElement('div');t.id='toastF';t.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#1f2937;color:#fff;padding:10px 14px;border-radius:8px;font-size:.88rem;z-index:9;max-width:92vw';document.body.appendChild(t);}
+  t.textContent=m; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(function(){t.style.display='none';},5000); }
+function micTip(id,msg){ var w=document.getElementById('int_'+id); if(!w) return;
+  w.innerHTML='<div class="tip">'+esc(msg)+'<br>Tip: tap the 🎤 key on your phone keyboard (Android Gboard or iPhone) to speak in English or Hindi directly into the box. / सुझाव: फ़ोन के कीबोर्ड पर 🎤 बटन दबाकर सीधे बॉक्स में हिन्दी या अंग्रेज़ी में बोलें।</div>'; }
+function dictate(id){
+  if(REC && RECID===id){ REC.stop(); return; }
+  if(REC){ try{REC.stop();}catch(e){} }
+  if(!SR) return micTip(id,'Voice typing is not available in this browser (use Chrome, Edge or Safari). / इस ब्राउज़र में वॉइस टाइपिंग उपलब्ध नहीं (Chrome, Edge या Safari उपयोग करें)।');
+  stopSpeak();
+  var rec=new SR(), el=document.getElementById(id), btn=document.getElementById('mic_'+id), live=document.getElementById('int_'+id), base=el.value;
+  rec.lang=prefs().dl==='hi'?'hi-IN':'en-IN'; rec.continuous=true; rec.interimResults=true;
+  rec.onresult=function(e){ var fin='',tmp='';
+    for(var i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal) fin+=e.results[i][0].transcript; else tmp+=e.results[i][0].transcript; }
+    if(fin){ base=(base&&!/\s$/.test(base)?base+' ':base)+fin.trim(); el.value=base; setA(id,base); S.voice[id]=true; }
+    live.textContent=tmp?'… '+tmp:'Listening… speak now / बोलिए…'; };
+  rec.onerror=function(e){
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'||e.error==='audio-capture') micTip(id,'The microphone could not be used on this page (permission blocked). / इस पृष्ठ पर माइक्रोफ़ोन उपयोग नहीं हो सका।');
+    else if(e.error!=='no-speech'&&e.error!=='aborted') micTip(id,'Voice typing stopped: '+e.error); };
+  rec.onend=function(){ if(RECID===id){REC=null;RECID=null;} if(btn){btn.classList.remove('on');btn.textContent='🎤';}
+    if(live&&/^Listening|^…/.test(live.textContent))live.textContent=''; };
+  try{ rec.start(); }catch(e){ return micTip(id,'Voice typing could not start. / वॉइस टाइपिंग शुरू नहीं हो सकी।'); }
+  REC=rec; RECID=id; if(btn){btn.classList.add('on');btn.textContent='⏹ Stop';} live.textContent='Listening… speak now / बोलिए…';
+}
+
+// ---- Personalised questionnaire for handwritten replies ----------------------------------------
+function qcode(){ var r=route()||[0], sec='';
+  r.forEach(function(pi){ F().pages[pi].items.forEach(function(it){ if(it.nav&&pi>0&&S.ans[it.id]){ var m=String(S.ans[it.id]).match(/^B\.(\d+)/); sec=m?'B'+m[1]:'C'; } }); });
+  var t=findTitle('Response type / उत्तर का प्रकार');
+  var part=S.key==='P'?'P':(t&&S.ans[t.id]?(/^Part A/.test(S.ans[t.id])?'A':/role/i.test(S.ans[t.id])?'R':/district/i.test(S.ans[t.id])?'C':'B'):'X');
+  return (S.key+'-'+part+(sec&&part!=='A'?'-'+sec:'')+'-'+S.sid.slice(0,6)).toUpperCase(); }
+function pqValues(){ var r=route()||[0], v={};
+  r.forEach(function(pi){ F().pages[pi].items.forEach(function(it){ if(it.id&&S.ans[it.id]!=null&&(pi===0?it.type!=='PARA':it.nav)) v[it.id]=S.ans[it.id]; }); }); return v; }
+function pqCount(){ var r=route()||[0], n=0;
+  r.forEach(function(pi){ F().pages[pi].items.forEach(function(it){ if(it.id&&!it.nav&&(pi>0||it.type==='PARA')) n++; }); }); return n; }
+function pqHtml(){
+  return '<div class="card noprint"><h2><span class="step"><b class="n">1</b><span>Your personalised questionnaire / आपकी व्यक्तिगत प्रश्नावली</span></span></h2>'+
+    '<p class="muted">It contains only the '+pqCount()+' questions for your part and section, with your details and the code <b>'+esc(qcode())+'</b> printed on it. Print it, write your answers, sign, then upload photographs or a scan below. / इसमें केवल आपके भाग/खंड के प्रश्न, आपका विवरण एवं कोड छपा है। प्रिंट करें, उत्तर लिखें, हस्ताक्षर करें, फिर नीचे फोटो/स्कैन अपलोड करें।</p>'+
+    '<div class="bar" style="justify-content:flex-start"><button class="pri" id="pdfb" onclick="getPdf()">⬇ Download PDF / पीडीएफ डाउनलोड करें</button>'+
+    '<button class="sec" onclick="personalPrint()">🖨 Print from the browser / ब्राउज़र से प्रिंट करें</button></div><div class="small muted" id="pdfmsg" style="margin-top:6px"></div></div>';
+}
+function saveBlob(blob,name){ var url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  var m=document.getElementById('pdfmsg'); if(m) m.innerHTML='If the download did not start, <a href="'+url+'" target="_blank" rel="noopener">open the PDF</a>. / डाउनलोड शुरू न हो तो <a href="'+url+'" target="_blank" rel="noopener">PDF खोलें</a>।'; }
+function getPdf(){
+  var b=document.getElementById('pdfb'), m=document.getElementById('pdfmsg'), r=route();
+  if(!r){ m.textContent='Please complete the part and section choices first. / कृपया पहले भाग एवं खंड चुनें।'; return; }
+  if(!LIVE){ m.textContent='Preview: the live form creates the PDF on the server. Opening the print view instead. / पूर्वावलोकन में प्रिंट दृश्य खुलेगा।'; setTimeout(personalPrint,800); return; }
+  b.disabled=true; b.textContent='Preparing your PDF… (about 10 seconds) / तैयार हो रहा है…';
+  rpc('makePdf',{form:S.key,pages:r,values:pqValues(),code:qcode()}).then(function(res){
+    var bin=atob(res.data), u=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    saveBlob(new Blob([u],{type:'application/pdf'}),res.name); b.disabled=false; b.textContent='⬇ Download PDF again / पुनः डाउनलोड करें';
+  },function(e){ b.disabled=false; b.textContent='⬇ Download PDF / पीडीएफ डाउनलोड करें';
+    m.textContent='The PDF could not be created ('+(e&&e.message||e)+'). Use “Print from the browser” and choose “Save as PDF”. / PDF नहीं बन सका, ब्राउज़र से प्रिंट करें।'; });
+}
+function personalPrint(){ var r=route()||[0], f=F(), code=qcode(), v=pqValues();
+  var h='<div class="card noprint bar"><button class="sec" onclick="review()">← Back / पीछे</button><button class="pri" onclick="window.print()">Print or Save as PDF / प्रिंट करें</button></div>'+
+    '<div class="card blank"><h1>'+esc(f.title)+'</h1><p class="small"><i>Personalised questionnaire for handwritten reply / हस्तलिखित उत्तर हेतु व्यक्तिगत प्रश्नावली</i></p>'+
+    '<div class="gridwrap"><table class="grid" style="margin-bottom:10px"><tr><td><b>Questionnaire code / प्रश्नावली कोड</b></td><td><b>'+esc(code)+'</b></td></tr>';
+  r.forEach(function(pi){ F().pages[pi].items.forEach(function(it){ if(it.id&&v[it.id]!=null&&it.type!=='CB') h+='<tr><td><b>'+esc(it.title)+'</b></td><td>'+esc(Array.isArray(v[it.id])?v[it.id].join(', '):v[it.id])+'</td></tr>'; }); });
+  h+='</table></div><p class="small">Answer every question below. These are only the questions for your part and section. Data items: a number, or NH / NA. / नीचे दिए सभी प्रश्नों के उत्तर दें।</p>';
+  r.forEach(function(pi){ var p=f.pages[pi], its=p.items.filter(function(it){return !(pi===0&&it.type!=='PARA'&&it.type!=='HDR')&&!it.nav;});
+    if(!its.some(function(i){return i.type!=='HDR';})) return;
+    h+='<h2>'+esc(p.title||'Questions / प्रश्न')+'</h2>'+(p.help?'<p class="small muted">'+esc(p.help)+'</p>':'');
+    its.forEach(function(it){ h+=blankItem(it); }); });
+  var d=F().pages[0].items.filter(function(i){return i.type==='CB';})[0];
+  h+='<h2>Declaration and signature / घोषणा एवं हस्ताक्षर</h2>'+(d?'<div class="bq"><div class="bo">☐ '+esc(d.choices[0])+'</div></div>':'')+
+    '<div class="bq"><b>Name, designation, signature, date and seal / नाम, पदनाम, हस्ताक्षर, दिनांक एवं मुद्रा</b><div class="ln"></div><div class="ln"></div><div class="ln"></div></div>'+
+    '<p class="small muted">Code '+esc(code)+' · Photograph every page and upload it at the same link. / प्रत्येक पृष्ठ की फोटो उसी लिंक पर अपलोड करें।</p></div>';
+  app.innerHTML=h; window.scrollTo(0,0); }
+function blankItem(it){
+  if(it.type==='HDR') return '<h3>'+esc(it.title)+'</h3>';
+  var h='<div class="bq"><b>'+esc(it.title)+'</b>'+(it.help?'<div class="small muted">'+esc(it.help)+'</div>':'');
+  if(it.type==='TEXT') h+='<div class="ln"></div>';
+  else if(it.type==='PARA') h+='<div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div>';
+  else if(it.type==='GRID') h+='<div class="gridwrap"><table class="grid"><tr><th></th>'+it.cols.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'</tr>'+it.rows.map(function(r){return '<tr><td>'+esc(r)+'</td>'+it.cols.map(function(){return '<td>☐</td>';}).join('')+'</tr>';}).join('')+'</table></div>';
+  else if(it.choices&&it.choices.length>12) h+='<div class="ln"></div>';
+  else if(it.choices) h+=it.choices.map(function(c){return '<div class="bo">☐ '+esc(c)+'</div>';}).join('');
+  return h+'</div>'; }
+
+// ---- Review, documents and submission -----------------------------------------------------------
+function fmt(it,v){ if(it.type==='CB') return v.join('; '); if(it.type==='GRID') return it.rows.map(function(r){return r+': '+(v[r]||'—');}).join('\n'); return v; }
+function reviewHtml(){
+  var f=F(), h='<h3>'+esc('Mode of response / उत्तर का माध्यम')+'</h3><dl><dd>'+esc(MODE_TXT[S.mode]||'')+'</dd></dl>';
+  S.hist.forEach(function(pi){var p=f.pages[pi]; h+='<h3>'+esc(p.title||'Officer details / अधिकारी का विवरण')+'</h3><dl>';
+    p.items.forEach(function(it){ if(!it.id||(S.mode==='handwritten'&&it.type==='PARA')) return; var v=S.ans[it.id]; if(v==null||v===''||(Array.isArray(v)&&!v.length)) v='—'; else v=fmt(it,v);
+      h+='<dt>'+esc(it.title)+'</dt><dd>'+esc(v)+'</dd>'; }); h+='</dl>';});
+  if(S.files.length) h+='<h3>Documents / दस्तावेज़</h3><dl>'+S.files.map(function(x,i){return '<dd>'+(i+1)+'. '+esc(x.docType)+' — '+esc(x.name)+'</dd>';}).join('')+'</dl>';
+  return h;
+}
+function docTypes(){return BOOT.docTypes[S.key];}
+function review(){
+  var f=F(), hand=S.mode==='handwritten', dts=docTypes();
+  var h='<div class="card top"><h1>'+esc(f.title)+'</h1><p class="muted">Attach documents, check your answers, then submit. / दस्तावेज़ संलग्न करें, उत्तर जाँचें, फिर जमा करें।</p></div>';
+  if(hand) h+=pqHtml();
+  h+='<div class="card noprint" id="docs"><h2>'+(hand?'<span class="step"><b class="n">2</b><span>':'')+(hand?'Upload your handwritten response / हस्तलिखित उत्तर अपलोड करें<span class="req">*</span></span></span>':'Supporting documents (optional) / सहायक दस्तावेज़ (वैकल्पिक)')+'</h2>'+
+    (hand?'<p class="muted">Photograph every page in good light, flat and readable, or upload one scanned PDF. Photos are reduced in size automatically. / प्रत्येक पृष्ठ की स्पष्ट फोटो लें या एक स्कैन PDF अपलोड करें। फोटो का आकार स्वतः कम किया जाता है।</p>':'')+
+    '<p class="small"><b>Documents requested in this form / इस प्रपत्र में अपेक्षित दस्तावेज़:</b></p><ul class="docs">'+
+    dts.filter(function(d){return !/Handwritten|^Other/.test(d.t);}).map(function(d){return '<li>'+esc(d.t)+(d.n?' <span class="muted">— '+esc(d.n)+'</span>':'')+'</li>';}).join('')+'</ul>'+
+    '<p class="small muted">Where a question says “E-mail …”, you may upload the document here instead. PDF, JPG, PNG, Word or Excel; up to '+BOOT.config.maxFiles+' files, '+BOOT.config.maxMB+' MB each. Aggregate or programme documents only — no personal data of children or beneficiaries. / '+
+    'जहाँ प्रश्न में “ईमेल करें” लिखा है, वह दस्तावेज़ यहाँ अपलोड किया जा सकता है। केवल समेकित या कार्यक्रम दस्तावेज़।</p>'+
+    '<div class="upl">'+(hand?'<label>📷 Add photographs or scan of the response / फोटो या स्कैन जोड़ें<input type="file" multiple accept="image/*,.pdf" onchange="addFiles(this,\'hand\')"></label>':'')+
+    '<label>📎 Add a supporting document / सहायक दस्तावेज़ जोड़ें<input type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" onchange="addFiles(this,\'doc\')"></label></div>'+
+    '<ul class="flist" id="flist"></ul><div class="err" id="ferr" style="display:block"></div></div>';
+  h+='<div class="card rev"><h2>Your answers / आपके उत्तर</h2>'+reviewHtml()+'</div>';
+  h+='<div class="card bar noprint"><button class="sec" onclick="back()">← Edit / संपादित करें</button><button class="pri" id="sub" onclick="submitAll()">Submit / जमा करें</button></div>';
+  app.innerHTML=h; window.scrollTo(0,0); drawFiles();
+}
+function drawFiles(){
+  var ul=document.getElementById('flist'); if(!ul) return; var dts=docTypes();
+  ul.innerHTML=S.files.map(function(x,i){
+    return '<li><span class="nm">'+esc(x.name)+' <span class="muted">('+(x.size/1048576).toFixed(1)+' MB)</span></span>'+
+      '<select aria-label="Document type" onchange="S.files['+i+'].docType=this.value">'+dts.map(function(d){return '<option'+(d.t===x.docType?' selected':'')+'>'+esc(d.t)+'</option>';}).join('')+'</select>'+
+      '<span class="st '+(x.state==='done'?'ok':x.state==='error'?'bad':'')+'">'+esc(x.msg)+'</span>'+
+      '<button class="sec x" onclick="rmFile('+i+')" aria-label="Remove">✕</button></li>';}).join('');
+}
+function rmFile(i){S.files.splice(i,1);drawFiles();}
+function compress(file,cb){
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type)) return cb(file);
+  var img=new Image(), url=URL.createObjectURL(file);
+  img.onload=function(){ var m=2200, w=img.width, h=img.height, r=Math.min(1,m/Math.max(w,h));
+    var c=document.createElement('canvas'); c.width=Math.round(w*r); c.height=Math.round(h*r);
+    var x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(url);
+    c.toBlob(function(b){ cb(b && b.size<file.size ? new File([b],file.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'}) : file); },'image/jpeg',0.82); };
+  img.onerror=function(){URL.revokeObjectURL(url);cb(file);}; img.src=url;
+}
+function addFiles(input,kind){
+  var list=Array.prototype.slice.call(input.files), err=document.getElementById('ferr'); err.textContent=''; input.value='';
+  if(S.files.length+list.length>BOOT.config.maxFiles){err.textContent='A maximum of '+BOOT.config.maxFiles+' files can be attached. / अधिकतम '+BOOT.config.maxFiles+' फ़ाइलें।';return;}
+  var dts=docTypes(), def=kind==='hand'?dts.filter(function(d){return /Handwritten/.test(d.t);})[0].t:dts[0].t;
+  list.forEach(function(file){
+    var e={name:file.name,size:file.size,docType:def,state:'busy',msg:'Preparing…',id:null}; S.files.push(e); drawFiles();
+    compress(file,function(f2){
+      e.name=f2.name; e.size=f2.size;
+      if(f2.size>BOOT.config.maxMB*1048576){e.state='error';e.msg='Larger than '+BOOT.config.maxMB+' MB / बहुत बड़ी फ़ाइल';drawFiles();return;}
+      e.msg='Uploading… / अपलोड हो रहा है…'; drawFiles();
+      var r=new FileReader(); r.onload=function(){
+        var data=String(r.result).split(',')[1];
+        if(!LIVE){setTimeout(function(){e.id='preview';e.state='done';e.msg='✓ Ready (preview) / तैयार';drawFiles();},400);return;}
+        rpc('uploadFile',{sid:S.sid,name:f2.name,type:f2.type||'application/octet-stream',data:data})
+          .then(function(res){e.id=res.id;e.state='done';e.msg='✓ Uploaded / अपलोड हुआ';drawFiles();},function(x){e.state='error';e.msg=(x&&x.message)||'Upload failed';drawFiles();});
+      }; r.readAsDataURL(f2);
+    });
+  });
+}
+function payload(){
+  var f=F(), out={form:S.key, mode:S.mode, path:S.hist.slice(), values:{}, sid:S.sid, code:S.mode==='handwritten'?qcode():'', voice:Object.keys(S.voice||{}), inviteeId:BOOT.invitee?BOOT.invitee.id:'', hp:(document.getElementById('hp')||{}).value||'',
+    files:S.files.filter(function(x){return x.state==='done';}).map(function(x){return {id:x.id,docType:x.docType};})};
+  S.hist.forEach(function(pi){ f.pages[pi].items.forEach(function(it){ if(it.id && S.ans[it.id]!=null && !(S.mode==='handwritten'&&it.type==='PARA')) out.values[it.id]=S.ans[it.id]; }); });
+  return out;
+}
+function submitAll(){
+  var err=document.getElementById('ferr'); err.textContent='';
+  if(S.files.some(function(x){return x.state==='busy';})){err.textContent='Please wait until all files have uploaded. / कृपया सभी फ़ाइलें अपलोड होने तक प्रतीक्षा करें।';return;}
+  if(S.files.some(function(x){return x.state==='error';})){err.textContent='Remove the files marked in red, or add them again. / लाल चिह्नित फ़ाइलें हटाएँ या पुनः जोड़ें।';return;}
+  if(S.mode==='handwritten' && !S.files.some(function(x){return /Handwritten/.test(x.docType);})){err.textContent='Please upload the handwritten / scanned response (document type “Handwritten / scanned response”). / कृपया हस्तलिखित उत्तर अपलोड करें।';document.getElementById('docs').scrollIntoView({behavior:'smooth'});return;}
+  var b=document.getElementById('sub'); b.disabled=true; b.textContent='Submitting… / जमा हो रहा है…';
+  var p=payload();
+  if(!LIVE){ window.__P=p; setTimeout(function(){done('PREVIEW-'+Date.now().toString(36).toUpperCase());},300); return; }
+  rpc('submitResponse',p).then(function(r){done(r.ref);},function(e){b.disabled=false;b.textContent='Submit / जमा करें';
+      alert('The response could not be saved. Your draft is kept on this device — please try again.\nउत्तर सहेजा नहीं जा सका। आपका मसौदा इस उपकरण पर सुरक्षित है — कृपया पुनः प्रयास करें।\n\n'+(e&&e.message||e));});
+}
+function nextTaskIndex(){ if(!guided()) return -1; var pl=BOOT.invitee.plan;
+  for(var i=0;i<pl.length;i++) if(!pl[i].doneBefore && S.sent.indexOf(i)<0) return i; return -1; }
+function continueNext(){ var i=nextTaskIndex(); if(i<0) return; var keep={}, p0=F().pages[0], R=BOOT.invitee.routers;
+  p0.items.forEach(function(it){ if(it.id && S.ans[it.id]!=null && it.title!==R.type) keep[it.id]=S.ans[it.id]; });
+  start(S.key,{task:i,ans:keep,mode:S.mode}); }
+function done(ref){
+  var f=F(); S.done=true; store(dkey(),null); if(guided()) S.sent.push(S.task);
+  var ni=nextTaskIndex();
+  app.innerHTML='<div class="card top"><h1>'+esc(f.title)+'</h1><div class="okbox">'+(LIVE?'Thank you. Your response has been recorded. / धन्यवाद। आपका उत्तर दर्ज हो गया है।':'Preview only — nothing was sent. / केवल पूर्वावलोकन — कुछ भी नहीं भेजा गया।')+
+    '</div><p><b>Reference no. / संदर्भ क्रमांक:</b> '+esc(ref)+'<br><span class="small muted">'+new Date().toLocaleString('en-IN')+'</span></p>'+
+    (ni>-1?'<div class="note noprint" style="margin:10px 0"><b>Next requested part / अगला अपेक्षित भाग:</b> '+esc(BOOT.invitee.plan[ni].label)+
+      '<div style="margin-top:8px"><button class="pri" onclick="continueNext()">Continue to the next part / अगले भाग पर जाएँ →</button></div><div class="small muted" style="margin-top:6px">Your officer details are carried over. / आपका विवरण साथ रहेगा।</div></div>':
+      (guided()?'<div class="okbox" style="margin:10px 0">All parts requested from you have been received. / आपसे अपेक्षित सभी भाग प्राप्त हो गए हैं।</div>':''))+
+    '<div class="bar noprint"><button class="sec" onclick="window.print()">Print or save a copy (PDF) / प्रति प्रिंट करें</button>'+
+    '<button class="sec" onclick="'+(START?'start(S.key)':'landing()')+'">Submit another response / एक और उत्तर</button></div></div>'+
+    '<div class="card rev">'+reviewHtml()+'</div>';
+  window.scrollTo(0,0);
+}
+function init(){ if(START && FORMS[START]!=null) start(START); else landing(); }
+if(!SPEC && API_URL){
+  app.innerHTML='<div class="card">Loading… / लोड हो रहा है…</div>';
+  var qs=new URLSearchParams(location.search);
+  fetch(API_URL+'?api=boot&form='+encodeURIComponent(qs.get('form')||'')+'&t='+encodeURIComponent(qs.get('t')||'')).then(function(r){return r.json();})
+    .then(function(j){SPEC=j.spec;BOOT=j.boot;START=j.start||'';init();})
+    .catch(function(){app.innerHTML='<div class="card">The form could not be loaded. Please check your internet connection and reload. / फ़ॉर्म लोड नहीं हो सका, कृपया पुनः लोड करें।</div>';});
+} else init();
+</script>
+</body>
+</html>
