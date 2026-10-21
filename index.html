@@ -224,7 +224,7 @@ function sectionFor(){ var R=BOOT.routes&&BOOT.routes[S.key]; if(!R) return null
   for(var i=0;i<R.map.length&&!code;i++){ var k=R.map[i][0].toLowerCase(); if(R.key==='unit'?src.indexOf(k)===0:src.indexOf(k)>-1) code=R.map[i][1]; }
   var ri=T(R.routerTitle); if(!code||!ri) return null; return ri.choices.filter(function(c){return c.indexOf(code)===0;})[0]||null; }
 function nodalOK(){ var w=S.who; return !!(w && (w.isNodal || (!w.assigned && S.selfNodal))); }
-function allowedParts(){ var p=['A']; if(S.key==='D' && sectionFor()) p.push('R'); if(nodalOK()) p.push(S.key==='S'?'B':'C'); return p; }
+function allowedParts(){ var p=['A']; if(S.key==='D' && (sectionFor()||!BOOT.routes)) p.push('R'); if(nodalOK()) p.push(S.key==='S'?'B':'C'); return p; }
 function readyForType(){ return S.key==='S' ? !!unitVal() : (!!unitVal() && !!desigVal()); }
 function typeHtml(it){
   var id=it.id, unitShort=String(unitVal()).split(' / ')[0], h='<div class="q" id="w_'+id+'"><label class="t">'+esc(it.title)+'<span class="req">*</span></label>';
@@ -251,7 +251,7 @@ var whoT; function watch(id){
 function checkWho(){ if(!unitVal()) return; var em=T(BOOT.fields[S.key].email), ph=T(BOOT.phoneTitle&&BOOT.phoneTitle[S.key]), unit=unitVal();
   if(!LIVE){ S.who={assigned:false,isNodal:false}; refreshType(); return; }
   rpc('whoAmI',{form:S.key,unit:unit,email:em?S.ans[em.id]:'',mobile:ph?S.ans[ph.id]:''}).then(function(w){ if(unitVal()!==unit) return; S.who=w; refreshType(); },function(){ S.who={assigned:false,isNodal:false}; refreshType(); }); }
-function applyAuto(){ if(guided()||!(S.key==='S'||S.key==='D')) return; var R=BOOT.routes[S.key], ri=T(R.routerTitle), ti=typeItemObj(); if(!ri||!ti) return;
+function applyAuto(){ if(guided()||!(S.key==='S'||S.key==='D')) return; var R=BOOT.routes&&BOOT.routes[S.key]; if(!R) return; var ri=T(R.routerTitle), ti=typeItemObj(); if(!ri||!ti) return;
   var part=partOfChoice(S.ans[ti.id]||''), sec=sectionFor();
   if(((S.key==='S'&&part==='B')||(S.key==='D'&&part==='R')) && sec){ S.ans[ri.id]=sec; S.locked[ri.id]=true; } else { delete S.locked[ri.id]; if(!((S.key==='S'&&part==='B')||(S.key==='D'&&part==='R'))) delete S.ans[ri.id]; } }
 function stepsHtml(){ var st=S.page===0?1:(S.page==='REVIEW'?3:(S.done?4:2)); var L=['1 · Your details / विवरण','2 · Questions / प्रश्न','3 · Documents & submit / दस्तावेज़ एवं जमा'];
