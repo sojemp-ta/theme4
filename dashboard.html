@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Theme 4 Monitoring Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f4f6;--card:#fff;--ink:#1f2937;--muted:#5b6472;--line:#dfe2e6;--accent:#1f4e9a;--accent-ink:#fff;--soft:#eaf0fa;
+ --good:#0ca30c;--warn:#fab219;--crit:#d03b3b;--neutral:#8a93a0;--bar:#2a78d6;--err:#b42318}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111418;--card:#1b1f25;--ink:#e6e8eb;--muted:#a3abb7;--line:#353b44;--accent:#7aa5ec;--accent-ink:#0b1220;--soft:#1f2a3c;--neutral:#7d8694;--bar:#3987e5;--err:#ff8a80}}
+:root[data-theme="dark"]{--bg:#111418;--card:#1b1f25;--ink:#e6e8eb;--muted:#a3abb7;--line:#353b44;--accent:#7aa5ec;--accent-ink:#0b1220;--soft:#1f2a3c;--neutral:#7d8694;--bar:#3987e5;--err:#ff8a80}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans","Noto Sans Devanagari",system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:16px}
+header.top{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:flex-end;justify-content:space-between;margin-bottom:12px}
+header h1{font-size:1.25rem;margin:0}
+header .sub{color:var(--muted);font-size:.88rem}
+.demo{background:#fff3cd;color:#5c4400;border-radius:8px;padding:8px 12px;font-size:.88rem;margin-bottom:12px}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:14px}
+nav.tabs button{background:none;border:none;border-bottom:3px solid transparent;padding:10px 14px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px;min-width:0}
+.card h2{font-size:1rem;margin:0 0 10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi .v{font-size:1.7rem;font-weight:700;line-height:1.1}
+.kpi .l{color:var(--muted);font-size:.84rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+.meter{margin:10px 0}
+.meter .t{display:flex;justify-content:space-between;font-size:.9rem;gap:8px}
+.meter .track{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin-top:4px;display:flex;gap:2px}
+.meter .track i{display:block;height:100%}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.8rem;font-weight:600;white-space:nowrap}
+.chip::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c,var(--neutral))}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;color:var(--muted);margin:6px 0}
+table.t{width:100%;border-collapse:collapse;font-size:.88rem}
+table.t th{text-align:left;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 6px;white-space:nowrap;position:sticky;top:0;background:var(--card)}
+table.t td{border-bottom:1px solid var(--line);padding:8px 6px;vertical-align:top}
+table.t tr:hover td{background:var(--soft)}
+.scroll{overflow-x:auto;max-height:70vh;overflow-y:auto}
+.small{font-size:.82rem}.muted{color:var(--muted)}
+button,.btn{font:inherit;font-weight:600;border-radius:6px;padding:7px 12px;border:1px solid var(--accent);cursor:pointer;background:transparent;color:var(--accent);text-decoration:none;display:inline-block;font-size:.85rem}
+button.pri{background:var(--accent);color:var(--accent-ink)}
+button.mini,.btn.mini{padding:3px 8px;font-size:.78rem}
+button:disabled{opacity:.5;cursor:default}
+.acts{display:flex;gap:4px;flex-wrap:wrap}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:7px 9px;max-width:100%}
+textarea{width:100%;min-height:160px;font-family:ui-monospace,monospace;font-size:.82rem}
+.dtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:6px}
+.dt{border:1px solid var(--line);border-left:5px solid var(--c);border-radius:6px;padding:5px 8px;font-size:.8rem;cursor:default}
+.dt b{display:block;font-weight:600}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--card);font-size:.78rem;padding:4px 8px;border-radius:4px;white-space:nowrap;transform:translate(-50%,-110%);display:none}
+dialog{border:none;border-radius:12px;padding:0;max-width:640px;width:calc(100% - 32px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog form{padding:18px}
+dialog h3{margin:0 0 12px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fgrid label{display:flex;flex-direction:column;gap:3px;font-size:.84rem;font-weight:600}
+.fgrid .full{grid-column:1/-1}
+@media (max-width:560px){.fgrid{grid-template-columns:1fr}}
+.ferr{color:var(--err);font-size:.85rem;white-space:pre-line;margin-top:8px}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:8px;font-size:.88rem;display:none;z-index:9;max-width:90vw}
+.badge{display:inline-block;font-size:.72rem;font-weight:700;border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--muted)}
+.hand{border-color:var(--warn);color:var(--ink)}
+a{color:var(--accent)}
+.badge.nod{border-color:var(--good);color:var(--good)}
+.warnt{color:#9a6700}
+.seg{display:inline-flex;gap:4px}
+.nodchk span{font-weight:400}
+.plist{display:grid;gap:6px;max-height:50vh;overflow:auto}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:6px;cursor:pointer;font-weight:400}
+.empty{color:var(--muted);text-align:center;padding:20px}
+dialog.wide{max-width:980px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 14px;font-size:.86rem;margin-bottom:10px}
+.meta div b{display:block;color:var(--muted);font-weight:600;font-size:.76rem}
+.qa{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:4px 12px;margin:8px 0}
+.qa h4{margin:12px 0 4px;font-size:.92rem;color:var(--accent)}
+.qa dl{margin:0}.qa dt{font-weight:600;font-size:.84rem;margin-top:8px}.qa dd{margin:2px 0 0;white-space:pre-wrap;font-size:.9rem}
+.rbox{background:var(--soft);border-radius:8px;padding:10px 12px;margin-top:8px}
+.rbox textarea{min-height:80px;font-family:inherit;font-size:.9rem}
+.rv{font-size:.76rem;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div><h1>Theme 4 — Early Intervention · Monitoring dashboard</h1>
+  <div class="sub">SJ&amp;EPwD, GoMP · Departmental Summit, MoSJE · Responses due <span id="dl"></span></div></div>
+  <div class="small muted"><span id="upd">Loading…</span> <button class="mini" onclick="refresh()">Refresh</button></div>
+</header>
+<div id="demo"></div>
+<nav class="tabs" id="tabs"></nav>
+<main id="main"></main>
+</div>
+
+<dialog id="dlg"><form method="dialog" id="dform" onsubmit="return false"></form></dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+var BOOT = /*BOOT*/null;
+var API_URL = 'https://script.google.com/macros/s/AKfycbwW66ar5YmQE78XMANoEDAed1VY5CRuJQR5DCL2KzJ59DpEakE1sEycBPw4l-W4-XaB9g/exec';                     // set only in the copy hosted on GitHub Pages
+var DEMO = !BOOT && !API_URL;                // the preview file with sample data
+var KEY = BOOT ? BOOT.k : '';
+var LIVE = !DEMO;
+function hasGS(){ return typeof google!=='undefined' && google.script && google.script.run; }
+var DATA = null, TAB = 'overview', FILT = {reg:{level:'',status:'',q:''}, resp:{form:'',mode:''}};
+var STATUS = {
+  'Complete':{c:'var(--good)',i:'✓'}, 'Partial':{c:'var(--warn)',i:'½'}, 'Invited':{c:'var(--bar)',i:'✉'},
+  'Overdue':{c:'var(--crit)',i:'!'}, 'Not invited':{c:'var(--neutral)',i:'○'}, 'Clarification sought':{c:'var(--warn)',i:'?'}};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(function(){t.style.display='none';},4000);}
+function fdt(s){if(!s)return '—';var d=new Date(s);return d.toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
+function day(s){return new Date(s).toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});}
+function chip(st){var s=STATUS[st]||{c:'var(--neutral)',i:''};return '<span class="chip" style="--c:'+s.c+'">'+s.i+' '+esc(st)+'</span>';}
+function short(t){return String(t||'').split(' / ')[0];}
+
+// ---------------- server calls (live) or demo stubs (preview) ----------------
+function api(fn){var args=[].slice.call(arguments,1);
+  return new Promise(function(res,rej){
+    if(DEMO){ try{res(DEMO_API[fn].apply(null,args));}catch(e){rej(e);} return; }
+    if(hasGS()){ google.script.run.withSuccessHandler(res).withFailureHandler(function(e){rej(e);})[fn].apply(null,[KEY].concat(args)); return; }
+    // No Apps Script bridge (private window, several Google accounts, or the GitHub-hosted copy): call the web app directly.
+    fetch(API_URL||BOOT.exec,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:[KEY].concat(args)})})
+      .then(function(r){return r.json();}).then(function(j){ if(j.error) rej(new Error(j.error)); else res(j.result); }).catch(function(e){rej(new Error('Could not reach the web app ('+(e.message||e)+'). Check the internet connection and reload.'));});
+  });}
+function refresh(){document.getElementById('upd').textContent='Refreshing…';
+  return api('dash_data').then(function(d){DATA=d;compute();draw();document.getElementById('upd').textContent='Updated '+fdt(d.now);})
+    .catch(function(e){document.getElementById('upd').textContent='Could not load: '+(e.message||e);});}
+
+// ---------------- derived state ----------------
+function partsOf(r){var t=String(r.type||''),o=[]; if(r.form==='P')return ['P']; if(/Part A/.test(t))o.push('A'); if(/role section/i.test(t))o.push('R');
+  if(r.form==='S'&&/Part B/.test(t))o.push('B'); if(r.form==='D'&&/consolidated district/i.test(t))o.push('C'); return o;}
+function has(r,p){return r.parts.indexOf(p)>-1;}
+var PART_SHORT={A:'Part A',B:'Part B (consolidated)',R:'Part B role section',C:'District consolidated',P:'Partner sheet'};
+function contains(r){return r.parts.map(function(p){return PART_SHORT[p]||p;}).join(' + ')||'—';}
+var REVIEW={'':{c:'var(--neutral)',i:'○',l:'Not reviewed'},'Under review':{c:'var(--bar)',i:'…',l:'Under review'},'Accepted':{c:'var(--good)',i:'✓',l:'Accepted'},'Needs clarification':{c:'var(--warn)',i:'?',l:'Clarification sought'}};
+function rchip(r){var x=REVIEW[r.review||'']||REVIEW[''];return '<span class="chip rv" style="--c:'+x.c+'">'+x.i+' '+x.l+'</span>';}
+var C={};
+function compute(){
+  var all=[].concat(DATA.responses.S,DATA.responses.D,DATA.responses.P), past=new Date(DATA.now)>new Date(BOOT.closeAfter);
+  all.forEach(function(r){r.parts=partsOf(r);r.match=null;r.review=r.review||'';r.later=false;});
+  var byId={}; DATA.respondents.forEach(function(p){byId[p.id]=p;});
+  all.forEach(function(r){ if(r.inv&&byId[r.inv]) r.match=byId[r.inv]; });
+  all.forEach(function(r){ if(!r.match&&r.email){ var e=r.email.trim().toLowerCase();
+    r.match=DATA.respondents.filter(function(p){return p.form===r.form&&p.email&&p.email.toLowerCase()===e;})[0]||null; }});
+  DATA.respondents.forEach(function(p){
+    p.resp=all.filter(function(r){return r.match===p;}).sort(function(a,b){return b.ts<a.ts?-1:1;});
+    p.resp.forEach(function(r,i){ if(i>0) r.later=true; });
+    var need=(p.plan||[]).map(function(t){return t.part;}), have=[]; p.resp.forEach(function(r){have=have.concat(r.parts);});
+    var got=need.filter(function(x){return have.indexOf(x)>-1;}).length, last=p.resp[0];
+    p.status = last&&last.review==='Needs clarification'?'Clarification sought': need.length&&got===need.length?'Complete': p.resp.length?'Partial': p.invited||p.lastContact?(past?'Overdue':'Invited'):'Not invited';
+  });
+  C.all=all; C.unmatched=all.filter(function(r){return !r.match;});
+  C.hand=all.filter(function(r){return /Handwritten/.test(r.mode);});
+  C.handTodo=C.hand.filter(function(r){return r.tr!=='Yes';});
+  C.docs=all.reduce(function(a,r){return a+r.att.length;},0);
+  C.toReview=all.filter(function(r){return !r.review&&!r.later;}); C.clar=all.filter(function(r){return r.review==='Needs clarification'&&!r.later;});
+  C.st={}; Object.keys(STATUS).forEach(function(k){C.st[k]=DATA.respondents.filter(function(p){return p.status===k;}).length;});
+  function nodalOf(fk,u){return DATA.respondents.filter(function(p){return p.nodal&&p.form===fk&&p.unit===u;})[0]||null;}
+  function consOf(rs,pt){var c=rs.filter(function(r){return has(r,pt);}).sort(function(a,b){return b.ts<a.ts?-1:1;});return c;}
+  C.dept=BOOT.depts.filter(function(d){return !/^Other/.test(d);}).map(function(d){var rs=DATA.responses.S.filter(function(r){return r.unit===d;});
+    var a=rs.filter(function(r){return has(r,'A');}).length,cs=consOf(rs,'B'),b=cs.length;
+    return {fk:'S',name:d,a:a,b:b,cons:cs[0]||null,verify:cs.some(function(r){return /Self-declared/.test(r.nodal||'');}),nodal:nodalOf('S',d),status:b?'Complete':a?'Partial':'Pending',inv:DATA.respondents.filter(function(p){return p.form==='S'&&p.unit===d;}).length};});
+  C.dist=BOOT.districts.map(function(d){var rs=DATA.responses.D.filter(function(r){return r.unit===d;});
+    var a=rs.filter(function(r){return has(r,'A');}).length,ro=rs.filter(function(r){return has(r,'R');}).length,cs=consOf(rs,'C'),c=cs.length;
+    return {fk:'D',name:d,a:a,r:ro,c:c,b:c,cons:cs[0]||null,verify:cs.some(function(r){return /Self-declared/.test(r.nodal||'');}),nodal:nodalOf('D',d),status:c?'Complete':(a+ro)?'Partial':'Pending',inv:DATA.respondents.filter(function(p){return p.form==='D'&&p.unit===d;}).length};});
+  C.units=C.dept.concat(C.dist);
+  C.nodalN={S:C.dept.filter(function(x){return x.nodal;}).length,D:C.dist.filter(function(x){return x.nodal;}).length};
+  C.consN={S:C.dept.filter(function(x){return x.b;}).length,D:C.dist.filter(function(x){return x.c;}).length};
+  C.verifyN=C.units.filter(function(x){return x.verify;}).length;
+  C.partA=all.filter(function(r){return has(r,'A');}).length; C.roles=all.filter(function(r){return has(r,'R');}).length;
+  var days=[],t=new Date(DATA.now); for(var i=13;i>=0;i--){var d=new Date(t.getTime()-i*864e5);days.push({d:day(d),n:0});}
+  all.forEach(function(r){var k=day(r.ts);days.forEach(function(x){if(x.d===k)x.n++;});}); C.days=days;
+}
+var CSTAT={Complete:'var(--good)',Partial:'var(--warn)',Pending:'var(--crit)'};
+var CICON={Complete:'✓',Partial:'½',Pending:'○'};
+
+// ---------------- drawing ----------------
+var TABS=[['overview','Overview'],['nodal','Nodal officers & coverage'],['register','Respondents register'],['responses','Responses & documents'],['links','Links & help']];
+function draw(){
+  document.getElementById('tabs').innerHTML=TABS.map(function(t){return '<button class="'+(TAB===t[0]?'on':'')+'" onclick="TAB=\''+t[0]+'\';draw()">'+t[1]+
+    (t[0]==='responses'&&C.toReview.length?' <span class="badge hand">'+C.toReview.length+' to review</span>':'')+
+    (t[0]==='nodal'&&C.verifyN?' <span class="badge hand">'+C.verifyN+' to verify</span>':'')+'</button>';}).join('');
+  var m=document.getElementById('main');
+  m.innerHTML=({overview:vOverview,nodal:vNodal,register:vRegister,responses:vResponses,links:vLinks})[TAB]();
+  if(TAB==='overview') hookChart();
+}
+function meter(label,parts,total){
+  var seg=parts.map(function(p){return p.n?'<i title="'+esc(p.l+': '+p.n)+'" style="width:'+(100*p.n/Math.max(total,1))+'%;background:'+p.c+'"></i>':'';}).join('');
+  return '<div class="meter"><div class="t"><span>'+label+'</span><span class="muted">'+parts.map(function(p){return p.l+' '+p.n;}).join(' · ')+' / '+total+'</span></div><div class="track">'+seg+'</div></div>';
+}
+function vOverview(){
+  var R=DATA.respondents, left=Math.ceil((new Date(BOOT.closeAfter)-new Date(DATA.now))/864e5);
+  var invited=R.filter(function(p){return p.status!=='Not invited';}).length;
+  var deptB=C.dept.filter(function(x){return x.b;}).length, deptA=C.dept.filter(function(x){return !x.b&&x.a;}).length;
+  var distC=C.dist.filter(function(x){return x.c;}).length, distP=C.dist.filter(function(x){return !x.c&&(x.a+x.r);}).length;
+  var nD=C.dept.length, nT=C.dist.length;
+  var h='<div class="kpis">'+
+    k(left>0?left:'Closed',left>0?'days to deadline':'response window')+
+    k((C.nodalN.S+C.nodalN.D)+' / '+(nD+nT),'nodal officers assigned')+
+    k(C.consN.S+' / '+nD,'State consolidated replies')+k(C.consN.D+' / '+nT,'District consolidated replies')+
+    k(C.all.length,'forms received')+k(C.toReview.length,'to review')+k(C.clar.length,'clarification sought')+
+    k(C.partA,'Part A individual notes')+k(C.roles,'district role sections')+k(DATA.responses.P.length,'partner inputs')+
+    k(C.hand.length,'handwritten ('+C.handTodo.length+' to transcribe)')+k(C.docs,'documents uploaded')+'</div>';
+  h+='<div class="grid2"><div class="card"><h2>Progress</h2>'+
+    meter('Nodal officers assigned',[{l:'State',n:C.nodalN.S,c:'var(--good)'},{l:'District',n:C.nodalN.D,c:'var(--bar)'}],nD+nT)+
+    meter('State departments — consolidated Part B',[{l:'Part B received',n:deptB,c:'var(--good)'},{l:'Part A only',n:deptA,c:'var(--warn)'}],nD)+
+    meter('Districts — consolidated district reply',[{l:'Received',n:distC,c:'var(--good)'},{l:'Partial',n:distP,c:'var(--warn)'}],nT)+
+    meter('Register — status of each person',[{l:'Complete',n:C.st.Complete,c:'var(--good)'},{l:'Partial',n:C.st.Partial,c:'var(--warn)'},{l:'Awaited',n:C.st.Invited,c:'var(--bar)'},{l:'Overdue',n:C.st.Overdue,c:'var(--crit)'}],R.length)+
+    meter('Partners — input sheets',[{l:'Received',n:DATA.responses.P.length,c:'var(--good)'}],Math.max(R.filter(function(p){return p.form==='P';}).length,DATA.responses.P.length))+
+    '<div class="legend"><span class="chip" style="--c:var(--good)">✓ complete / received</span><span class="chip" style="--c:var(--warn)">½ partial</span><span class="chip" style="--c:var(--bar)">✉ awaited</span><span class="chip" style="--c:var(--crit)">! overdue</span></div></div>'+
+    '<div class="card"><h2>Submissions per day — last 14 days</h2>'+chartSvg()+'</div></div>';
+  var recent=C.all.slice().sort(function(a,b){return b.ts<a.ts?-1:1;}).slice(0,8);
+  var od=R.filter(function(p){return p.status==='Overdue'||p.status==='Invited';}).sort(function(a,b){return (a.lastContact||'')<(b.lastContact||'')?-1:1;}).slice(0,8);
+  h+='<div class="grid2"><div class="card"><h2>Latest submissions</h2>'+(recent.length?'<table class="t"><tr><th>When</th><th>Who</th><th>Form contains</th></tr>'+recent.map(function(r){
+    return '<tr><td class="small">'+fdt(r.ts)+'</td><td>'+esc(r.name||'—')+'<div class="small muted">'+esc(short(r.unit))+'</div></td><td class="small">'+esc(contains(r))+(/Handwritten/.test(r.mode)?' <span class="badge hand">handwritten</span>':'')+'<div><button class="mini" onclick="viewResp(\''+r.form+'\',\''+r.ref+'\')">View</button></div></td></tr>';}).join('')+'</table>':'<div class="empty">No submissions yet.</div>')+'</div>'+
+    '<div class="card"><h2>Follow up next (awaited, longest since contact)</h2>'+(od.length?'<table class="t"><tr><th>Who</th><th>Status</th><th>Last contact</th></tr>'+od.map(function(p){
+    return '<tr><td>'+esc(p.name||p.desig)+'<div class="small muted">'+esc(short(p.unit))+'</div></td><td>'+chip(p.status)+'</td><td class="small">'+fdt(p.lastContact)+'</td></tr>';}).join('')+'</table><div style="margin-top:8px"><button onclick="TAB=\'register\';FILT.reg.status=\'Awaited\';draw()">Open in register</button></div>':'<div class="empty">Nobody awaited.</div>')+'</div></div>';
+  return h;
+  function k(v,l){return '<div class="kpi"><div class="v">'+esc(v)+'</div><div class="l">'+esc(l)+'</div></div>';}
+}
+function chartSvg(){
+  var d=C.days, W=560,H=200,pl=28,pb=26,pt=10, max=Math.max(4,Math.max.apply(null,d.map(function(x){return x.n;})));
+  var step=(W-pl)/d.length, bw=Math.max(6,step-6), y=function(v){return pt+(H-pt-pb)*(1-v/max);};
+  var ticks=[0,Math.round(max/2),max], s='<div class="chart" id="chart"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Submissions per day, last 14 days">';
+  ticks.forEach(function(t){s+='<line x1="'+pl+'" x2="'+W+'" y1="'+y(t)+'" y2="'+y(t)+'" stroke="var(--line)" stroke-width="1"/><text x="'+(pl-6)+'" y="'+(y(t)+4)+'" text-anchor="end" font-size="10" fill="var(--muted)">'+t+'</text>';});
+  d.forEach(function(x,i){var bx=pl+i*step+(step-bw)/2, by=y(x.n), bh=H-pb-by;
+    if(x.n) s+='<path d="M'+bx+','+(H-pb)+'V'+(by+4)+'q0,-4 4,-4h'+(bw-8)+'q4,0 4,4V'+(H-pb)+'z" fill="var(--bar)"/>';
+    s+='<rect class="hit" data-i="'+i+'" x="'+(pl+i*step)+'" y="'+pt+'" width="'+step+'" height="'+(H-pt-pb)+'" fill="transparent"/>';
+    if(i%2===d.length%2||i===d.length-1) s+='<text x="'+(bx+bw/2)+'" y="'+(H-8)+'" text-anchor="middle" font-size="10" fill="var(--muted)">'+x.d.slice(8)+'/'+x.d.slice(5,7)+'</text>';});
+  s+='</svg><div class="tip" id="tip"></div></div><div class="small muted">Total in window: '+d.reduce(function(a,x){return a+x.n;},0)+'</div>';
+  return s;
+}
+function hookChart(){var c=document.getElementById('chart');if(!c)return;var tip=document.getElementById('tip');
+  c.querySelectorAll('.hit').forEach(function(r){r.addEventListener('mousemove',function(e){var x=C.days[+r.dataset.i],b=c.getBoundingClientRect();
+    tip.style.display='block';tip.style.left=(e.clientX-b.left)+'px';tip.style.top=(e.clientY-b.top)+'px';tip.textContent=x.d.split('-').reverse().join('.')+': '+x.n+' submission'+(x.n===1?'':'s');});
+    r.addEventListener('mouseleave',function(){tip.style.display='none';});});}
+
+function regFiltered(){var f=FILT.reg,q=f.q.toLowerCase();
+  return DATA.respondents.filter(function(p){
+    if(f.level&&p.level!==f.level)return false;
+    if(f.status==='Nodal officers'){if(!p.nodal)return false;} else if(f.status==='Awaited'){if(p.status!=='Invited'&&p.status!=='Overdue')return false;} else if(f.status&&p.status!==f.status)return false;
+    if(q&&[p.name,p.desig,p.unit,p.email,p.mobile,p.district].join(' ').toLowerCase().indexOf(q)<0)return false; return true;});}
+function vRegister(){
+  var rows=regFiltered(), f=FILT.reg;
+  var h='<div class="card"><div class="toolbar">'+
+    '<button class="pri" onclick="editDlg()">+ Add official / partner</button><button onclick="bulkDlg()">Paste a list (from Excel)</button>'+
+    '<span style="flex:1"></span>'+
+    '<select onchange="FILT.reg.level=this.value;draw()"><option value="">All levels</option>'+['State','District','Partner'].map(function(l){return '<option'+(f.level===l?' selected':'')+'>'+l+'</option>';}).join('')+'</select>'+
+    '<select onchange="FILT.reg.status=this.value;draw()"><option value="">All statuses</option>'+['Nodal officers','Not invited','Invited','Overdue','Awaited','Partial','Complete','Clarification sought'].map(function(l){return '<option'+(f.status===l?' selected':'')+'>'+l+'</option>';}).join('')+'</select>'+
+    '<input type="search" placeholder="Search name, unit, e-mail…" value="'+esc(f.q)+'" oninput="FILT.reg.q=this.value;clearTimeout(window._q);window._q=setTimeout(function(){draw();var i=document.querySelector(\'input[type=search]\');i.focus();i.setSelectionRange(i.value.length,i.value.length);},250)">'+
+    '</div><div class="toolbar small"><span id="selc">0 selected</span>'+
+    '<button class="mini" onclick="sendSel(\'invite\')">E-mail invitation to selected</button>'+
+    '<button class="mini" onclick="sendSel(\'reminder\')">E-mail reminder to selected</button>'+
+    '<button class="mini" onclick="selAwaited()">Select all awaited with e-mail</button>'+
+    '<span class="muted">E-mails left today: '+(DATA.quota<0?'n/a':DATA.quota)+'</span></div>';
+  if(!rows.length) return h+'<div class="empty">'+(DATA.respondents.length?'No one matches these filters.':'The register is empty. Add officials and partners one by one, or paste a list from Excel.')+'</div></div>';
+  h+='<div class="scroll"><table class="t"><tr><th><input type="checkbox" aria-label="Select all" onchange="selAll(this.checked)"></th><th>Name &amp; designation</th><th>Level · unit</th><th>Questions (one form)</th><th>Contact</th><th>Status</th><th>Last contact</th><th>Actions</th></tr>'+
+    rows.map(function(p){
+      return '<tr><td><input type="checkbox" class="sel" value="'+p.id+'" onchange="selCount()"></td>'+
+        '<td><b>'+esc(p.name||'—')+'</b>'+(p.nodal?' <span class="badge nod">★ Nodal</span>':'')+'<div class="small muted">'+esc(short(p.desig))+'</div></td>'+
+        '<td class="small">'+esc(p.level)+' · '+esc(short(p.unit))+(p.district?'<div class="muted">'+esc(p.district)+'</div>':'')+'</td>'+
+        '<td class="small">'+esc(p.expected)+planCell(p)+'</td>'+
+        '<td class="small">'+(p.email?esc(p.email):'<span class="muted">no e-mail</span>')+'<div class="muted">'+(p.mobile?'+'+esc(p.mobile):'no mobile')+'</div></td>'+
+        '<td>'+chip(p.status)+(p.resp.length?'<div class="small muted">'+p.resp.map(function(r){return '<a href="#" onclick="viewResp(\''+r.form+'\',\''+r.ref+'\');return false">'+esc(r.ref)+'</a>'+(r.later?' <span class="muted">(earlier)</span>':'');}).join('<br>')+'</div>':'')+'</td>'+
+        '<td class="small">'+fdt(p.lastContact)+(p.contacts?'<div class="muted">'+p.contacts+' contact'+(p.contacts>1?'s':'')+'</div>':'')+'</td>'+
+        '<td><div class="acts">'+(p.resp.length?'<button class="mini pri" onclick="viewResp(\''+p.resp[0].form+'\',\''+p.resp[0].ref+'\')">View response</button>':'')+'<button class="mini" onclick="copyLink(\''+p.id+'\')">Copy link</button>'+
+          (p.email?'<button class="mini" onclick="sendOne(\''+p.id+'\')">'+(p.invited?'Remind':'Invite')+' by e-mail</button>':'')+
+          (p.mobile?'<a class="btn mini" target="_blank" rel="noopener" href="'+waUrl(p)+'" onclick="logWA(\''+p.id+'\')">WhatsApp</a>':'')+
+          '<button class="mini" onclick="editDlg(\''+p.id+'\')">Edit</button><button class="mini" onclick="delOne(\''+p.id+'\')">Delete</button></div></td></tr>';}).join('')+'</table></div></div>';
+  return h;
+}
+function planCell(p){ if(!p.plan||!p.plan.length) return '';
+  return '<div class="muted" style="margin-top:3px">One form: '+p.plan.map(function(t){return esc(t.label.replace(/^Part B — /,'B: ').replace(/^Part A — .*/,'Part A').replace(/ \/ [^·]*$/,''));}).join(' + ')+'</div>'+
+    (p.plan.some(function(t){return t.needsChoice;})?'<div style="color:var(--err)">⚠ No section matches this department — the officer will choose it.</div>':''); }
+function link(p){return BOOT.base+'?form='+p.form+'&t='+p.id;}
+function waText(p){var who=[p.name,short(p.desig)].filter(String).join(', '), rem=p.invited?'Reminder: ':'';
+  return rem+'Respected '+who+', SJ&EPwD Department, GoMP — Theme 4 (Early Intervention) for the MoSJE Departmental Summit. Please fill your one form ('+p.expected+') by '+BOOT.deadline+' using your personal link: '+link(p)+
+    ' (you may type online or upload a handwritten copy).\n\nआदरणीय '+who+', विषय 4 (प्रारंभिक हस्तक्षेप) हेतु कृपया अपनी जानकारी '+BOOT.deadline+' तक इस लिंक से भेजें: '+link(p)+' (ऑनलाइन टाइप करें या हस्तलिखित प्रति अपलोड करें)।';}
+function waUrl(p){return 'https://wa.me/'+p.mobile+'?text='+encodeURIComponent(waText(p));}
+function byId(id){return DATA.respondents.filter(function(p){return p.id===id;})[0];}
+function copyText(t,msg){ (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast(msg);},function(){prompt('Copy this:',t);}); }
+function copyLink(id){copyText(link(byId(id)),'Personal link copied.');}
+function selCount(){var n=document.querySelectorAll('.sel:checked').length;var e=document.getElementById('selc');if(e)e.textContent=n+' selected';}
+function selAll(on){document.querySelectorAll('.sel').forEach(function(c){c.checked=on;});selCount();}
+function selAwaited(){document.querySelectorAll('.sel').forEach(function(c){var p=byId(c.value);c.checked=!!p.email&&(p.status==='Invited'||p.status==='Overdue');});selCount();}
+function sendIds(ids,kind){ if(!ids.length) return toast('Select at least one person.');
+  var withMail=ids.filter(function(id){return byId(id).email;}).length;
+  if(!confirm('Send '+(kind==='reminder'?'a reminder':'an invitation')+' e-mail to '+withMail+' person(s)'+(withMail<ids.length?' ('+(ids.length-withMail)+' without e-mail will be skipped)':'')+'?')) return;
+  toast('Sending…'); api('dash_send',ids,kind).then(function(r){toast(r.sent+' e-mail(s) sent.'+(r.skipped.length?' Skipped: '+r.skipped.join('; '):''));refresh();}).catch(err);}
+function sendSel(kind){sendIds([].map.call(document.querySelectorAll('.sel:checked'),function(c){return c.value;}),kind);}
+function sendOne(id){var p=byId(id);sendIds([id],p.invited?'reminder':'invite');}
+function logWA(id){var p=byId(id);api('dash_logWhatsApp',id,p.invited?'reminder':'invite').then(function(){setTimeout(refresh,800);});}
+function delOne(id){var p=byId(id);if(!confirm('Delete '+(p.name||p.desig)+' from the register? Their responses stay in the spreadsheet.'))return;api('dash_delete',id).then(function(){toast('Deleted.');refresh();}).catch(err);}
+function err(e){alert(e&&e.message||e);}
+
+// ---------------- add / edit dialog ----------------
+function optList(arr,sel){return arr.map(function(x){return '<option'+(x===sel?' selected':'')+'>'+esc(x)+'</option>';}).join('');}
+function editDlg(id,pre){
+  var p=id?byId(id):(pre||{level:'State'}), f=document.getElementById('dform');
+  var lvl=p.level||'State', fk={State:'S',District:'D',Partner:'P'}[lvl];
+  var unitField = lvl==='State'?'<select name="unit" required><option value="">Choose department</option>'+optList(BOOT.depts,p.unit)+'</select>'
+    : lvl==='District'?'<select name="unit" required><option value="">Choose district</option>'+optList(BOOT.districts,p.unit)+'</select>'
+    : '<input name="unit" required value="'+esc(p.unit||'')+'" placeholder="Name of organisation">';
+  var desigField = lvl==='District'?'<input name="desig" list="droles" value="'+esc(p.desig||'')+'" placeholder="Choose or type"><datalist id="droles">'+optList(BOOT.dRoles)+'</datalist>'
+    : '<input name="desig" value="'+esc(p.desig||'')+'" placeholder="'+(lvl==='Partner'?'Designation of contact person':'e.g. Deputy Director, RBSK')+'">';
+  f.innerHTML='<h3>'+(id?'Edit':'Add')+' official / partner</h3><div class="fgrid">'+
+    '<label>Level<select name="level" onchange="editDlg('+(id?'\''+id+'\'':'null')+',Object.assign(readDlg(),{level:this.value,unit:\'\'}))">'+optList(['State','District','Partner'],lvl)+'</select></label>'+
+    '<label>'+(lvl==='State'?'Department':lvl==='District'?'District':'Organisation')+unitField+'</label>'+
+    (lvl==='Partner'?'<label class="full">District(s) served<input name="district" value="'+esc(p.district||'')+'"></label>':'')+
+    '<label>Name<input name="name" value="'+esc(p.name||'')+'" autocomplete="off"></label>'+
+    '<label>Designation'+desigField+'</label>'+
+    (lvl!=='Partner'?'<label class="full nodchk"><span><input type="checkbox" name="nodal" '+(p.nodal?'checked ':'')+'> <b>Designated nodal officer</b> for this '+(lvl==='State'?'department':'district')+' — submits the consolidated reply (only one per '+(lvl==='State'?'department':'district')+'; assigning replaces any previous nodal officer)</span></label>':'')+
+    (p.expected?'<div class="full small"><b>Questions in this person\'s form now:</b> '+esc(p.expected)+'</div>':'')+
+    '<label>E-mail<input name="email" type="email" value="'+esc(p.email||'')+'"></label>'+
+    '<label>Mobile (WhatsApp)<input name="mobile" inputmode="tel" value="'+esc(p.mobile?String(p.mobile).replace(/^91/,''):'')+'" placeholder="10-digit mobile"></label>'+
+    '<label class="full">Remarks<input name="remarks" value="'+esc(p.remarks||'')+'"></label></div>'+
+    '<div class="small muted" style="margin-top:8px">The questions are set automatically and answered in ONE form: everyone — Part A; the nodal officer — also the consolidated reply; district officers whose designation has a role section — also that section. The personal link opens exactly those questions. An e-mail or a mobile number is required. Officials\' contact details stay in the private Respondents tab.</div>'+
+    '<div class="ferr" id="derr"></div><div class="toolbar" style="justify-content:flex-end;margin:14px 0 0"><button onclick="document.getElementById(\'dlg\').close()">Cancel</button><button class="pri" onclick="saveDlg('+(id?'\''+id+'\'':'null')+')">Save</button></div>';
+  var d=document.getElementById('dlg'); if(!d.open) d.showModal();
+}
+function readDlg(){var f=document.getElementById('dform'),o={};[].forEach.call(f.querySelectorAll('[name]'),function(e){o[e.name]=e.type==='checkbox'?e.checked:e.value.trim();});return o;}
+function saveDlg(id){var o=readDlg(); if(id)o.id=id; var e=document.getElementById('derr'); e.textContent='';
+  if(!o.unit){e.textContent='Choose the department, district or organisation.';return;}
+  if(!o.email&&!o.mobile){e.textContent='Give an e-mail or a mobile number.';return;}
+  api('dash_save',o).then(function(x){document.getElementById('dlg').close();toast('Saved.'+(x&&x.replaced&&x.replaced.length?' Previous nodal officer replaced: '+x.replaced.join(', '):''));refresh();}).catch(function(x){e.textContent=x.message||x;});}
+var BULK_HEAD=['Level (State / District / Partner)','Department / District / Organisation','District (partners)','Name','Designation','Expected response','E-mail','Mobile','Remarks','Nodal officer (Yes/No)'];
+function bulkDlg(){var f=document.getElementById('dform');
+  f.innerHTML='<h3>Paste a list from Excel</h3><p class="small">Copy rows from Excel or Google Sheets in this column order (a heading row is skipped automatically):</p>'+
+    '<p class="small"><b>'+BULK_HEAD.join(' → ')+'</b> <button class="mini" onclick="copyText(BULK_HEAD.join(\'\\t\'),\'Headings copied — paste into Excel row 1.\')">Copy headings</button></p>'+
+    '<p class="small muted">Department and district names must match the lists exactly (see Links &amp; help). Put <b>Yes</b> in the last column for the one nodal officer of each department / district. Expected response is set automatically from that.</p>'+
+    '<textarea id="bulk" placeholder="Paste here…" oninput="bulkCheck()"></textarea><div class="small" id="bchk"></div><div class="ferr" id="derr"></div>'+
+    '<div class="toolbar" style="justify-content:flex-end;margin:14px 0 0"><button onclick="document.getElementById(\'dlg\').close()">Cancel</button><button class="pri" onclick="bulkSave()">Add to register</button></div>';
+  document.getElementById('dlg').showModal();}
+function bulkParse(){var t=document.getElementById('bulk').value.replace(/\r/g,'').split('\n').filter(function(l){return l.trim();});
+  if(t.length&&/^level/i.test(t[0]))t.shift();
+  return t.map(function(l){var c=l.split('\t').map(function(x){return x.trim();});
+    var lv=c[0]?c[0][0].toUpperCase()+c[0].slice(1).toLowerCase():'', fk={State:'S',District:'D',Partner:'P'}[lv];
+    var exp=c[5]&&fk?(BOOT.expected[fk].filter(function(x){return x.toLowerCase().indexOf(c[5].toLowerCase())===0;})[0]||c[5]):'';
+    var unit=c[1]||''; if(fk==='S'){unit=BOOT.depts.filter(function(d){return d.toLowerCase().indexOf(unit.toLowerCase())===0;})[0]||unit;}
+    if(fk==='D'){unit=BOOT.districts.filter(function(d){return d.toLowerCase()===unit.toLowerCase();})[0]||unit;}
+    return {level:lv,unit:unit,district:c[2]||'',name:c[3]||'',desig:c[4]||'',expected:exp,email:c[6]||'',mobile:c[7]||'',remarks:c[8]||'',nodal:/^(y|yes|true|1)$/i.test(c[9]||'')};});}
+function bulkCheck(){var r=bulkParse(),bad=[],seenN={};r.forEach(function(x,i){var fk={State:'S',District:'D',Partner:'P'}[x.level];
+  if(!fk)bad.push('Row '+(i+1)+': level must be State, District or Partner');
+  else if(fk==='S'&&BOOT.depts.indexOf(x.unit)<0)bad.push('Row '+(i+1)+': department not in the list — "'+x.unit+'"');
+  else if(fk==='D'&&BOOT.districts.indexOf(x.unit)<0)bad.push('Row '+(i+1)+': district not in the list — "'+x.unit+'"');
+  if(!x.email&&!x.mobile)bad.push('Row '+(i+1)+': no e-mail or mobile');
+  if(x.nodal){var key=x.level+'|'+x.unit; if(seenN[key])bad.push('Row '+(i+1)+': second nodal officer for '+short(x.unit)+' (also row '+seenN[key]+')'); seenN[key]=i+1;}});
+  document.getElementById('bchk').textContent=r.length+' row(s) read'+(bad.length?'':' — all look fine.');
+  document.getElementById('derr').textContent=bad.slice(0,12).join('\n')+(bad.length>12?'\n…':''); return bad.length?null:r;}
+function bulkSave(){var r=bulkCheck(); if(!r||!r.length)return;
+  api('dash_bulk',r).then(function(x){document.getElementById('dlg').close();toast(x.added+' added to the register.');refresh();}).catch(function(e){document.getElementById('derr').textContent=e.message||e;});}
+
+// ---------------- nodal officers & coverage ----------------
+FILT.nod={lvl:'S',show:''};
+function vNodal(){
+  var f=FILT.nod, list=f.lvl==='S'?C.dept:C.dist, past=new Date(DATA.now)>new Date(BOOT.closeAfter);
+  var rows=list.filter(function(u){ if(f.show==='gap')return !u.nodal; if(f.show==='await')return u.nodal&&!u.b; if(f.show==='got')return u.b; if(f.show==='verify')return u.verify; return true; });
+  var h='<div class="kpis">'+
+    kp(C.nodalN.S+' / '+C.dept.length,'State nodal officers assigned')+kp(C.consN.S+' / '+C.dept.length,'State consolidated received')+
+    kp(C.nodalN.D+' / '+C.dist.length,'District nodal officers assigned')+kp(C.consN.D+' / '+C.dist.length,'District consolidated received')+
+    kp(C.verifyN,'self-declared replies to verify')+'</div>';
+  h+='<div class="card"><div class="toolbar"><div class="seg">'+[['S','State departments ('+C.dept.length+')'],['D','Districts ('+C.dist.length+')']].map(function(x){return '<button class="'+(f.lvl===x[0]?'pri':'')+'" onclick="FILT.nod.lvl=\''+x[0]+'\';draw()">'+x[1]+'</button>';}).join('')+'</div>'+
+    '<span style="flex:1"></span><select onchange="FILT.nod.show=this.value;draw()">'+[['','All'],['gap','Nodal officer not assigned'],['await','Assigned — consolidated awaited'],['got','Consolidated received'],['verify','Self-declared — to verify']].map(function(x){return '<option value="'+x[0]+'"'+(f.show===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></div>'+
+    '<p class="small muted">One nodal officer per '+(f.lvl==='S'?'department':'district')+' gives the consolidated reply, in the same single form as their Part A. Other officers\' forms contain Part A'+(f.lvl==='D'?' and their role section':'')+' only.</p>';
+  if(!rows.length) return h+'<div class="empty">Nothing matches this filter.</div></div>';
+  h+='<div class="scroll"><table class="t"><tr><th>'+(f.lvl==='S'?'Department':'District')+'</th><th>Nodal officer</th><th>Consolidated reply</th><th>Part A notes</th>'+(f.lvl==='D'?'<th>Role sections</th>':'')+'<th>Others on register</th><th>Actions</th></tr>'+
+    rows.map(function(u){ var n=u.nodal, cons=u.cons;
+      var nc=n?'<b>'+esc(n.name||'—')+'</b><div class="small muted">'+esc(short(n.desig))+'</div><div class="small muted">'+esc(n.email||'')+(n.mobile?' · +'+esc(n.mobile):'')+'</div>':'<span class="chip" style="--c:var(--crit)">○ Not assigned</span>';
+      var cc=cons?'<span class="chip" style="--c:'+(u.verify?'var(--warn)':'var(--good)')+'">'+(u.verify?'! Received — verify':'✓ Received')+'</span><div class="small muted">'+fdt(cons.ts)+' · '+esc(cons.ref)+'</div><div>'+rchip(cons)+' <button class="mini" onclick="viewResp(\''+cons.form+'\',\''+cons.ref+'\')">View</button></div>'+(u.verify?'<div class="small warnt">Self-declared nodal: '+esc(cons.name||'')+'</div>':'')
+        :(n?(past?'<span class="chip" style="--c:var(--crit)">! Overdue</span>':'<span class="chip" style="--c:var(--bar)">✉ Awaited</span>'):'<span class="muted small">—</span>');
+      var acts=n?'<button class="mini" onclick="copyLink(\''+n.id+'\')">Copy link</button>'+(n.email?'<button class="mini" onclick="sendOne(\''+n.id+'\')">'+(n.invited?'Remind':'Invite')+' by e-mail</button>':'')+
+        (n.mobile?'<a class="btn mini" target="_blank" rel="noopener" href="'+waUrl(n)+'" onclick="logWA(\''+n.id+'\')">WhatsApp</a>':'')+'<button class="mini" onclick="assignDlg(\''+u.fk+'\',\''+esc(u.name).replace(/'/g,"\\'")+'\')">Change</button>'
+        :'<button class="mini pri" onclick="assignDlg(\''+u.fk+'\',\''+esc(u.name).replace(/'/g,"\\'")+'\')">Assign nodal</button>';
+      return '<tr><td>'+esc(short(u.name))+'</td><td>'+nc+'</td><td>'+cc+'</td><td>'+u.a+'</td>'+(f.lvl==='D'?'<td>'+u.r+'</td>':'')+'<td>'+Math.max(0,u.inv-(n?1:0))+'</td><td><div class="acts">'+acts+'</div></td></tr>'; }).join('')+'</table></div></div>';
+  return h;
+  function kp(v,l){return '<div class="kpi"><div class="v">'+esc(v)+'</div><div class="l">'+esc(l)+'</div></div>';}
+}
+function assignDlg(fk,unit){
+  var f=document.getElementById('dform'), lvl=fk==='S'?'State':'District';
+  var people=DATA.respondents.filter(function(p){return p.form===fk&&p.unit===unit;});
+  f.innerHTML='<h3>Nodal officer — '+esc(short(unit))+'</h3><p class="small">The nodal officer alone submits the '+(fk==='S'?'consolidated Part B reply of the department':'consolidated district reply')+'. Choose a person already on the register, or add a new person.</p>'+
+    (people.length?'<div class="plist">'+people.map(function(p){return '<label class="opt"><input type="radio" name="nod" value="'+p.id+'"'+(p.nodal?' checked':'')+'><span><b>'+esc(p.name||'—')+'</b> · '+esc(short(p.desig))+'<br><span class="small muted">'+esc(p.email||'')+(p.mobile?' · +'+esc(p.mobile):'')+'</span></span></label>';}).join('')+'</div>':'<p class="small muted">Nobody from '+esc(short(unit))+' is on the register yet.</p>')+
+    '<div class="ferr" id="derr"></div><div class="toolbar" style="justify-content:space-between;margin:14px 0 0"><button onclick="editDlg(null,{level:\''+lvl+'\',unit:\''+esc(unit).replace(/'/g,"\\'")+'\',nodal:true})">+ Add a new person as nodal</button><span>'+
+    (people.some(function(p){return p.nodal;})?'<button onclick="unassign(\''+fk+'\',\''+esc(unit).replace(/'/g,"\\'")+'\')">Remove nodal</button> ':'')+
+    '<button onclick="document.getElementById(\'dlg\').close()">Cancel</button> '+(people.length?'<button class="pri" onclick="saveNodal()">Assign</button>':'')+'</span></div>';
+  var d=document.getElementById('dlg'); if(!d.open) d.showModal();
+}
+function saveNodal(){ var c=document.querySelector('input[name=nod]:checked'); if(!c){document.getElementById('derr').textContent='Choose a person.';return;}
+  api('dash_setNodal',c.value,true).then(function(x){document.getElementById('dlg').close();toast('Nodal officer assigned.'+(x.replaced&&x.replaced.length?' Replaced: '+x.replaced.join(', '):''));refresh();}).catch(function(e){document.getElementById('derr').textContent=e.message||e;}); }
+function unassign(fk,unit){ var n=DATA.respondents.filter(function(p){return p.nodal&&p.form===fk&&p.unit===unit;})[0]; if(!n) return;
+  if(!confirm('Remove '+(n.name||n.desig)+' as nodal officer for '+short(unit)+'?')) return;
+  api('dash_setNodal',n.id,false).then(function(){document.getElementById('dlg').close();toast('Nodal officer removed.');refresh();}).catch(err); }
+
+// ---------------- responses & documents ----------------
+FILT.resp.rev='';
+function vResponses(){
+  var f=FILT.resp, rows=C.all.filter(function(r){return (!f.form||r.form===f.form)&&(!f.mode||(f.mode==='hand'?/Handwritten/.test(r.mode):f.mode==='todo'?(/Handwritten/.test(r.mode)&&r.tr!=='Yes'):f.mode==='docs'?r.att.length:f.mode==='unmatched'?!r.match:true))&&
+      (!f.rev||(f.rev==='none'?(!r.review&&!r.later):f.rev==='later'?r.later:r.review===f.rev));})
+    .sort(function(a,b){return b.ts<a.ts?-1:1;});
+  var h='<div class="card"><div class="toolbar"><select onchange="FILT.resp.form=this.value;draw()"><option value="">All forms</option>'+[['S','Form S — State'],['D','Form D — District'],['P','Form P — Partners']].map(function(x){return '<option value="'+x[0]+'"'+(f.form===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select>'+
+    '<select onchange="FILT.resp.rev=this.value;draw()">'+[['','Any review status'],['none','Not yet reviewed'],['Under review','Under review'],['Needs clarification','Clarification sought'],['Accepted','Accepted'],['later','Earlier versions (replaced)']].map(function(x){return '<option value="'+x[0]+'"'+(f.rev===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select>'+
+    '<select onchange="FILT.resp.mode=this.value;draw()">'+[['','All responses'],['hand','Handwritten'],['todo','Handwritten — to transcribe'],['docs','With documents'],['unmatched','Not on register']].map(function(x){return '<option value="'+x[0]+'"'+(f.mode===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select>'+
+    '<span style="flex:1"></span><a class="btn" target="_blank" rel="noopener" href="'+esc(BOOT.sheetUrl)+'">Open responses spreadsheet</a><a class="btn" target="_blank" rel="noopener" href="'+esc(BOOT.uploadsUrl)+'">Open documents folder</a></div>'+
+    '<p class="small muted">Press <b>View</b> to read a response, record your review, and send the officer guidance by e-mail or WhatsApp. When the officer submits again, the new response replaces the earlier one.</p>';
+  if(!rows.length) return h+'<div class="empty">No responses match.</div></div>';
+  h+='<div class="scroll"><table class="t"><tr><th>Received</th><th>Who</th><th>Unit</th><th>Form contains</th><th>Mode</th><th>Documents</th><th>Review</th><th></th></tr>'+rows.map(function(r){
+    var hand=/Handwritten/.test(r.mode);
+    return '<tr'+(r.later?' style="opacity:.6"':'')+'><td class="small">'+fdt(r.ts)+'<div class="muted">'+esc(r.ref)+'</div>'+(r.later?'<div class="muted">earlier version</div>':'')+'</td><td>'+esc(r.name||'—')+'<div class="small muted">'+esc(short(r.desig))+'</div>'+(r.match?'':'<div class="small muted">not on register <button class="mini" onclick="addFromResp(\''+r.ref+'\')">Add</button></div>')+'</td>'+
+      '<td class="small">'+esc(short(r.unit))+(r.dept?'<div class="muted">'+esc(r.dept)+'</div>':'')+'</td><td class="small">'+esc(contains(r))+(r.nodal?'<div class="'+(/Self/.test(r.nodal)?'warnt':'muted')+'">★ '+esc(r.nodal)+'</div>':'')+'</td>'+
+      '<td class="small">'+(hand?'<span class="badge hand">handwritten</span>'+(r.code?'<div class="muted">code '+esc(r.code)+'</div>':'')+'<div><label><input type="checkbox" '+(r.tr==='Yes'?'checked ':'')+'onchange="markTr(\''+r.form+'\',\''+r.ref+'\',this.checked)"> transcribed</label></div>':'typed'+(r.voice?'<div class="muted">🎤 voice used</div>':''))+'</td>'+
+      '<td class="small">'+(r.att.length?r.att.map(function(u,i){return '<div><a target="_blank" rel="noopener" href="'+esc(u)+'">'+esc(r.atype[i]||('File '+(i+1)))+'</a></div>';}).join(''):'—')+'</td>'+
+      '<td class="small">'+rchip(r)+(r.note?'<div class="muted" title="'+esc(r.note)+'">'+esc(r.note.slice(0,60))+(r.note.length>60?'…':'')+'</div>':'')+'</td>'+
+      '<td><button class="mini pri" onclick="viewResp(\''+r.form+'\',\''+r.ref+'\')">View</button></td></tr>';}).join('')+'</table></div></div>';
+  return h;
+}
+// ---------------- read one response, review it, guide the officer ----------------
+var VR=null;
+function respByRef(ref){return C.all.filter(function(x){return x.ref===ref;})[0];}
+function mobileOf(r){var m=(r.match&&r.match.mobile)||String(r.phone||'').replace(/\D/g,''); if(m.length===10)m='91'+m; if(m.length===11&&m[0]==='0')m='91'+m.slice(1); return /^91[6-9]\d{9}$/.test(m)?m:'';}
+function viewResp(form,ref){
+  var r=respByRef(ref), f=document.getElementById('dform'), d=document.getElementById('dlg'); if(!r) return;
+  VR={form:form,ref:ref,data:null}; d.classList.add('wide');
+  var hand=/Handwritten/.test(r.mode), mob=mobileOf(r), email=(r.match&&r.match.email)||r.email;
+  f.innerHTML='<h3>'+esc(r.name||'—')+' · '+esc(short(r.unit))+'</h3>'+
+    '<div class="meta"><div><b>Designation</b>'+esc(short(r.desig)||'—')+'</div><div><b>Form contains</b>'+esc(contains(r))+'</div><div><b>Received</b>'+fdt(r.ts)+' · '+esc(r.ref)+'</div>'+
+    '<div><b>Mode</b>'+(hand?'Handwritten / scanned'+(r.code?' · code '+esc(r.code):''):'Typed online'+(r.voice?' · 🎤 voice used':''))+'</div>'+(r.nodal?'<div><b>Nodal status</b>'+esc(r.nodal)+'</div>':'')+
+    '<div><b>Contact</b>'+esc(email||'no e-mail')+(mob?' · +'+esc(mob):'')+'</div>'+(r.later?'<div><b>Note</b>A newer response from this person exists</div>':'')+'</div>'+
+    (r.att.length?'<div class="small"><b>Documents:</b> '+r.att.map(function(u,i){return '<a target="_blank" rel="noopener" href="'+esc(u)+'">'+esc(r.atype[i]||('File '+(i+1)))+'</a>';}).join(' · ')+'</div>':'<div class="small muted">No documents attached.</div>')+
+    (hand?'<div class="small warnt" style="margin-top:6px">Handwritten reply: the answers are in the uploaded scan above. Only the officer details are typed.</div>':'')+
+    '<div class="qa" id="qa"><p class="muted">Loading answers…</p></div>'+
+    '<div class="rbox"><div class="toolbar" style="margin-bottom:6px"><b>Your review</b><select id="rvs">'+Object.keys(REVIEW).map(function(k){return '<option value="'+esc(k)+'"'+((r.review||'')===k?' selected':'')+'>'+REVIEW[k].l+'</option>';}).join('')+'</select>'+
+    (r.revOn?'<span class="small muted">last saved '+fdt(r.revOn)+'</span>':'')+'</div>'+
+    '<textarea id="rvn" placeholder="Note / guidance for the officer — e.g. Please give the number of functional DEICs (H-3) and attach the RBSK order. Write in English or Hindi.">'+esc(r.note||'')+'</textarea>'+
+    '<div class="toolbar" style="margin:8px 0 0"><button class="pri" onclick="saveReview()">Save review</button>'+
+    (email?'<button onclick="guide(\'email\')">E-mail guidance to officer</button>':'')+(mob?'<button onclick="guide(\'whatsapp\')">WhatsApp guidance</button>':'')+
+    '<span style="flex:1"></span><button onclick="copyAnswers()">Copy answers</button><button onclick="closeDlg()">Close</button></div>'+
+    '<div class="small muted">Guidance marks the response “Clarification sought” and sends the officer the note with '+(r.match?'their personal link — the form opens with their earlier answers filled in':'the general form link (add the officer to the register to give a personal link that keeps their answers)')+'.</div><div class="ferr" id="derr"></div></div>';
+  if(!d.open) d.showModal();
+  api('dash_response',form,ref).then(function(x){ if(!VR||VR.ref!==ref) return; VR.data=x; drawQA(r,x); }).catch(function(e){var q=document.getElementById('qa'); if(q) q.innerHTML='<p class="ferr">Could not load the answers: '+esc(e.message||e)+'</p>';});
+}
+function drawQA(r,x){ var q=document.getElementById('qa'); if(!q) return;
+  var voice=String((x.extra||{})['Voice-dictated answers']||'').split('; ').filter(String);
+  q.innerHTML=x.sections.map(function(sec){ return '<h4>'+esc(sec.title)+'</h4><dl>'+sec.qa.map(function(a){ var v=voice.indexOf(String(a[0]).split(' / ')[0].slice(0,60))>-1;
+    return '<dt>'+esc(a[0])+(v?' <span class="badge hand">🎤 dictated — check</span>':'')+'</dt><dd>'+esc(a[1])+'</dd>'; }).join('')+'</dl>'; }).join('')||'<p class="muted">No answers recorded.</p>'; }
+function closeDlg(){ var d=document.getElementById('dlg'); d.close(); d.classList.remove('wide'); VR=null; }
+function saveReview(){ var st=document.getElementById('rvs').value, nt=document.getElementById('rvn').value.trim();
+  api('dash_review',VR.form,VR.ref,st,nt).then(function(){toast('Review saved.');closeDlg();refresh();}).catch(function(e){document.getElementById('derr').textContent=e.message||e;}); }
+function guide(ch){ var nt=document.getElementById('rvn').value.trim(), r=respByRef(VR.ref), e=document.getElementById('derr'); e.textContent='';
+  if(!nt){ e.textContent='Write the guidance for the officer in the box first.'; return; }
+  if(ch==='whatsapp'){ var who=[r.name,short(r.desig)].filter(String).join(', '), lk=r.match?link(r.match):BOOT.links[r.form];
+    var txt='Respected '+who+', your Theme 4 response ('+r.ref+') has been reviewed. Please: '+nt+'\nKindly revise and submit again by '+BOOT.deadline+': '+lk+'\n\nआदरणीय '+who+', विषय 4 पर आपके उत्तर की समीक्षा की गई है। कृपया ऊपर बताए अनुसार संशोधित कर '+BOOT.deadline+' तक पुनः जमा करें।';
+    window.open('https://wa.me/'+mobileOf(r)+'?text='+encodeURIComponent(txt),'_blank','noopener'); }
+  else if(!confirm('E-mail this guidance to '+((r.match&&r.match.email)||r.email)+'?')) return;
+  api('dash_guide',VR.form,VR.ref,nt,ch).then(function(x){toast(ch==='email'?'Guidance e-mailed to '+x.to+'.':'Guidance recorded; WhatsApp opened.');closeDlg();refresh();}).catch(function(x){e.textContent=x.message||x;}); }
+function copyAnswers(){ if(!VR||!VR.data) return toast('Answers still loading.'); var r=respByRef(VR.ref);
+  var t=[r.ref+' — '+(r.name||'')+', '+short(r.desig)+', '+short(r.unit)].concat(VR.data.sections.map(function(s){return '\n'+s.title+'\n'+s.qa.map(function(a){return a[0]+'\n'+a[1];}).join('\n\n');})).join('\n');
+  copyText(t,'Answers copied — paste them into the compilation file.'); }
+function markTr(form,ref,on){api('dash_transcribed',form,ref,on).then(function(){toast(on?'Marked as transcribed.':'Marked as not transcribed.');refresh();}).catch(err);}
+function addFromResp(ref){var r=C.all.filter(function(x){return x.ref===ref;})[0];
+  editDlg(null,{level:{S:'State',D:'District',P:'Partner'}[r.form],unit:r.unit,district:r.district,name:r.form==='P'?'':r.name,desig:r.desig,email:r.email});}
+
+// ---------------- links & help ----------------
+function vLinks(){
+  var L=BOOT.links;
+  return '<div class="grid2"><div class="card"><h2>General form links</h2><p class="small muted">Use personal links from the register wherever possible — they pre-fill the officer\'s details and match the reply automatically. General links suit circulars and WhatsApp groups.</p>'+
+    [['Form S — State officials',L.S],['Form D — District officials',L.D],['Form P — Partners',L.P]].map(function(x){return '<div class="toolbar"><b style="min-width:190px">'+x[0]+'</b><button class="mini" onclick="copyText(\''+x[1]+'\',\'Link copied.\')">Copy</button><a class="btn mini" target="_blank" rel="noopener" href="'+esc(x[1])+'">Open</a></div>';}).join('')+
+    (BOOT.teamLink?'<h2 style="margin-top:14px">Dashboard link for team members</h2><p class="small muted">Opens in any browser without Google sign-in (also in private windows and with several Google accounts). It contains the access key: send it one-to-one to named staff only.</p><div class="toolbar"><button class="mini" onclick="copyText(BOOT.teamLink,\'Team dashboard link copied — send it privately.\')">Copy team link</button></div>':'')+
+    '<h2 style="margin-top:14px">Working files</h2><div class="toolbar"><a class="btn" target="_blank" rel="noopener" href="'+esc(BOOT.sheetUrl)+'">Responses spreadsheet</a><a class="btn" target="_blank" rel="noopener" href="'+esc(BOOT.uploadsUrl)+'">Uploaded documents</a></div>'+
+    '<p class="small">Deadline: <b>'+esc(BOOT.deadline)+'</b> · E-mails left today: <b>'+(DATA.quota<0?'n/a':DATA.quota)+'</b></p></div>'+
+    '<div class="card"><h2>How status is worked out</h2><ul class="small"><li><b>Complete</b> — the person\'s one form has arrived with everything expected (e.g. Part A and the consolidated reply).</li><li><b>Clarification sought</b> — you sent guidance; awaiting the revised form.</li><li><b>Partial</b> — something arrived, but not everything expected.</li><li><b>Invited</b> — contacted by e-mail or WhatsApp; nothing yet.</li><li><b>Overdue</b> — invited, nothing received, deadline passed.</li><li><b>Not invited</b> — on the register, not yet contacted.</li></ul>'+
+    '<p class="small">A reply is matched to a person by their personal link, otherwise by the same official e-mail on the same form. Replies that match nobody appear under <i>Responses → Not on register</i>.</p>'+
+    '<h2>Security</h2><ul class="small"><li>This dashboard link contains an access key. Do not forward it beyond named Directorate and technical-assistance staff.</li><li>To revoke it, the account owner runs <code>resetDashboardKey()</code> in the script and shares the new link.</li><li>Officials\' names, e-mails and mobiles are held only in the Respondents tab of the private spreadsheet.</li></ul>'+
+    '<h2>Lists used for matching</h2><details class="small"><summary>Departments ('+BOOT.depts.length+')</summary><ol>'+BOOT.depts.map(function(d){return '<li>'+esc(d)+'</li>';}).join('')+'</ol></details>'+
+    '<details class="small"><summary>Districts ('+BOOT.districts.length+')</summary><p>'+BOOT.districts.map(esc).join(', ')+'</p></details></div></div>';
+}
+
+// ---------------- boot ----------------
+function init(){
+  if(!BOOT && API_URL){
+    var m=String(location.hash||'').match(/k=([A-Za-z0-9]+)/); KEY=m?m[1]:'';
+    if(!KEY){ document.getElementById('upd').textContent='This link is incomplete — use the full private dashboard link (it ends with #k=…).'; return; }
+    document.getElementById('upd').textContent='Loading…';
+    api('dash_boot').then(function(b){ BOOT=b; init(); }).catch(function(e){ document.getElementById('upd').textContent='Could not open the dashboard: '+(e.message||e); });
+    return;
+  }
+  if(!BOOT){ demoBoot(); document.getElementById('demo').innerHTML='<div class="demo"><b>Preview with sample data.</b> Names and numbers here are invented for demonstration; nothing is saved or sent. The live dashboard reads the real register and responses.</div>'; }
+  document.getElementById('dl').textContent=BOOT.deadline;
+  document.getElementById('dlg').addEventListener('close',function(){this.classList.remove('wide');});
+  refresh(); setInterval(function(){ if(!document.hidden && !document.getElementById('dlg').open) refresh(); },120000);
+}
+
+init();
+</script>
+</body>
+</html>
