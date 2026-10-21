@@ -65,6 +65,12 @@ button:disabled{opacity:.55;cursor:wait}
 .interim{font-size:.85rem;color:var(--muted);font-style:italic;min-height:1em;margin-top:4px}
 .tip{background:var(--warnbg);border-radius:6px;padding:8px 10px;font-size:.85rem;margin-top:6px}
 .step{display:flex;gap:10px;align-items:flex-start}.step b.n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:inline-flex;align-items:center;justify-content:center}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0;padding:0;list-style:none;font-size:.8rem}
+.steps li{padding:4px 10px;border-radius:14px;border:1px solid var(--line);color:var(--muted)}
+.steps li.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.steps li.done{color:var(--ok);border-color:var(--ok)}
+.nbox{margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--soft);font-size:.88rem}
+.nbox.warn{background:var(--warnbg)}
 .plan{margin:8px 0 0;padding-left:20px}.plan li{margin:2px 0}.plan .now{font-weight:700}.plan .ok{color:var(--ok)}
 .lock{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--soft);border-radius:6px;padding:10px 12px}
 .inv{background:var(--soft);border-radius:8px;padding:10px 12px;font-size:.92rem;margin-top:10px}
@@ -145,7 +151,7 @@ function firstPending(){ if(!guided()) return 0; var got=(BOOT.invitee.received|
   for(var i=0;i<pl.length;i++){var j=got.indexOf(pl[i].part); if(j>-1){got.splice(j,1);pl[i].doneBefore=true;} else return i;} return 0; }
 function start(k,keep){
   var prev=S||{};
-  S={key:k,page:0,hist:[],ans:{},mode:null,done:false,sid:sid(),files:[],voice:{},task:0,locked:{},unlocked:false,sent:prev.key===k?(prev.sent||[]):[]};
+  S={key:k,page:0,hist:[],ans:{},mode:null,done:false,sid:sid(),files:[],voice:{},who:null,selfNodal:false,task:0,locked:{},unlocked:false,sent:prev.key===k?(prev.sent||[]):[]};
   if(keep){ S.task=keep.task; S.ans=keep.ans; S.mode=keep.mode; } else if(guided()) S.task=firstPending();
   var d=load(dkey());
   if(d && d.ans && Object.keys(d.ans).length){
@@ -153,7 +159,7 @@ function start(k,keep){
       S.page=d.page||0;S.hist=d.hist||[];S.ans=d.ans;S.mode=d.mode||null; if(S.page==='REVIEW'){S.page=S.hist.pop()||0;}
     } else store(dkey(),null);
   }
-  prefill(); applyTask(); render();
+  prefill(); applyTask(); render(); if(!guided() && (k==='S'||k==='D') && unitVal()) checkWho();
 }
 
 function planHtml(){ var inv=BOOT.invitee, pl=inv.plan;
@@ -168,8 +174,9 @@ function itemHtml(it){
   if(hidden(it)) return '';
   if(it.type==='HDR') return '<div class="q"><h3>'+esc(it.title)+'</h3>'+(it.help?'<div class="help">'+esc(it.help)+'</div>':'')+'</div>';
   var v=S.ans[it.id], id=it.id, h='<div class="q" id="w_'+id+'">';
-  if(S.locked[id]) return h+'<label class="t">'+esc(it.title)+'</label><div class="lock"><span>✓ <b>'+esc(v)+'</b><br><span class="small muted">Selected from your invitation / आपके आमंत्रण के अनुसार चयनित</span></span>'+
+  if(S.locked[id]) return h+'<label class="t">'+esc(it.title)+'</label><div class="lock"><span>✓ <b>'+esc(v)+'</b><br><span class="small muted">'+(guided()?'Selected from your invitation / आपके आमंत्रण के अनुसार चयनित':'Selected automatically from your department / designation / आपके विभाग/पदनाम के अनुसार स्वतः चयनित')+'</span></span>'+
     '<button class="sec x" onclick="unlock()">Change / बदलें</button></div></div>';
+  if(autoType(it)) return typeHtml(it);
   var canMic=(it.type==='PARA'||(it.type==='TEXT'&&!/e-mail|ईमेल/i.test(it.title)));
   h+='<label class="t" for="'+id+'">'+esc(it.title)+(required(it)?'<span class="req" aria-label="required">*</span>':'')+
     '<span class="ib noprint"><button type="button" class="sec" title="Listen / सुनें" aria-label="Read this question aloud" onclick="speakItem(\''+id+'\')">🔊</button>'+
@@ -199,13 +206,57 @@ function itemHtml(it){
   h+='<div class="err" id="e_'+id+'"></div></div>';
   return h;
 }
-function setA(id,v){S.ans[id]=v;clearErr(id);autosave();}
+function setA(id,v){S.ans[id]=v;clearErr(id);autosave();watch(id);}
 function pick(id,i,multi,on){var it=findItem(id),c=it.choices[i];
-  if(multi){var a=(S.ans[id]||[]).filter(function(x){return x!==c;}); if(on)a.push(c); S.ans[id]=a;} else S.ans[id]=c; clearErr(id);autosave();}
+  if(multi){var a=(S.ans[id]||[]).filter(function(x){return x!==c;}); if(on)a.push(c); S.ans[id]=a;} else S.ans[id]=c; clearErr(id);autosave();watch(id);}
 function gridPick(id,ri,ci){var it=findItem(id),g=S.ans[id]||{}; g[it.rows[ri]]=it.cols[ci]; S.ans[id]=g; clearErr(id);autosave();}
 function clearErr(id){var w=document.getElementById('w_'+id); if(w) w.classList.remove('bad');}
 function setMode(m){S.mode=m; var w=document.getElementById('w_mode'); autosave(); render(true);}
 
+// ---- Automatic routing: department / designation / nodal officer -----------------------------------
+function T(title){ return title?findTitle(title):null; }
+function typeItemObj(){ return T(BOOT.typeTitle); }
+function autoType(it){ return (S.key==='S'||S.key==='D') && !guided() && BOOT.typeTitle && it.title===BOOT.typeTitle; }
+function unitVal(){ var it=T(BOOT.fields[S.key].unit); return it?(S.ans[it.id]||''):''; }
+function desigVal(){ var it=T(BOOT.fields[S.key].desig); return it?(S.ans[it.id]||''):''; }
+function partOfChoice(c){ if(/^Part A/.test(c)) return 'A'; if(S.key==='S'&&/^Part B/.test(c)) return 'B'; if(/role section/i.test(c)) return 'R'; if(/Consolidated district/i.test(c)) return 'C'; return '?'; }
+function sectionFor(){ var R=BOOT.routes&&BOOT.routes[S.key]; if(!R) return null; var src=String(R.key==='unit'?unitVal():desigVal()).toLowerCase(), code=null;
+  for(var i=0;i<R.map.length&&!code;i++){ var k=R.map[i][0].toLowerCase(); if(R.key==='unit'?src.indexOf(k)===0:src.indexOf(k)>-1) code=R.map[i][1]; }
+  var ri=T(R.routerTitle); if(!code||!ri) return null; return ri.choices.filter(function(c){return c.indexOf(code)===0;})[0]||null; }
+function nodalOK(){ var w=S.who; return !!(w && (w.isNodal || (!w.assigned && S.selfNodal))); }
+function allowedParts(){ var p=['A']; if(S.key==='D' && sectionFor()) p.push('R'); if(nodalOK()) p.push(S.key==='S'?'B':'C'); return p; }
+function readyForType(){ return S.key==='S' ? !!unitVal() : (!!unitVal() && !!desigVal()); }
+function typeHtml(it){
+  var id=it.id, unitShort=String(unitVal()).split(' / ')[0], h='<div class="q" id="w_'+id+'"><label class="t">'+esc(it.title)+'<span class="req">*</span></label>';
+  if(!readyForType()){ return h+'<div class="nbox">'+(S.key==='S'?'First choose your department above. / पहले ऊपर अपना विभाग चुनें।':'First choose your district and designation above. / पहले ऊपर अपना जिला एवं पदनाम चुनें।')+'</div><div class="err" id="e_'+id+'"></div></div>'; }
+  var ok=allowedParts(); if(S.ans[id] && ok.indexOf(partOfChoice(S.ans[id]))<0) delete S.ans[id];
+  h+='<div class="help">Only the options that apply to you are shown. / केवल आपसे संबंधित विकल्प दिखाए गए हैं।</div>';
+  it.choices.forEach(function(c,i){ if(ok.indexOf(partOfChoice(c))<0) return; var sec=partOfChoice(c)==='R'||partOfChoice(c)==='B'?sectionFor():null;
+    h+='<label class="opt"><input type="radio" name="'+id+'" '+(S.ans[id]===c?'checked ':'')+'onchange="pick(\''+id+'\','+i+',false,true)"><span>'+esc(c)+(sec?'<br><span class="small muted">→ opens '+esc(sec.split(' / ')[0])+'</span>':(partOfChoice(c)==='B'?'<br><span class="small muted">→ opens the common questions (no dedicated section)</span>':''))+'</span></label>'; });
+  var w=S.who, cons=S.key==='S'?'Part B consolidated departmental reply':'consolidated district reply';
+  if(!w) h+='<div class="nbox">Checking who the nodal officer is… / नोडल अधिकारी की जानकारी देखी जा रही है…</div>';
+  else if(w.isNodal) h+='<div class="nbox">✓ You are the designated nodal officer for <b>'+esc(unitShort)+'</b> and can submit the '+cons+'. / आप नामित नोडल अधिकारी हैं।</div>';
+  else if(w.assigned) h+='<div class="nbox warn">The '+cons+' for <b>'+esc(unitShort)+'</b> is submitted by the designated nodal officer ('+esc(String(w.desig||'').split(' / ')[0])+'). You can submit Part A'+(S.key==='D'&&sectionFor()?' and your role section':'')+'. If you are the nodal officer, enter the official e-mail or mobile registered with the Directorate. / समेकित उत्तर नामित नोडल अधिकारी द्वारा दिया जाएगा।</div>';
+  else h+='<div class="nbox warn">No nodal officer has been registered yet for <b>'+esc(unitShort)+'</b>.<label class="opt" style="margin-top:8px;background:var(--card)"><input type="checkbox" '+(S.selfNodal?'checked ':'')+'onchange="S.selfNodal=this.checked;refreshType()"><span>I am the nodal officer designated for the '+cons+' of '+esc(unitShort)+'. / मैं '+esc(unitShort)+' के समेकित उत्तर हेतु नामित नोडल अधिकारी हूँ।</span></label></div>';
+  return h+'<div class="err" id="e_'+id+'"></div></div>';
+}
+function refreshType(){ var it=typeItemObj(); if(!it||!autoType(it)) return; var el=document.getElementById('w_'+it.id); if(el) el.outerHTML=typeHtml(it); }
+var whoT; function watch(id){
+  if(S.page!==0 || guided() || !(S.key==='S'||S.key==='D')) return;
+  var F0=BOOT.fields[S.key], t=findItem(id).title;
+  if([F0.unit,F0.desig,F0.email,BOOT.phoneTitle&&BOOT.phoneTitle[S.key]].indexOf(t)<0) return;
+  if(t===F0.unit){ S.who=null; S.selfNodal=false; }
+  clearTimeout(whoT); refreshType(); whoT=setTimeout(checkWho,t===F0.unit||t===F0.desig?50:700);
+}
+function checkWho(){ if(!unitVal()) return; var em=T(BOOT.fields[S.key].email), ph=T(BOOT.phoneTitle&&BOOT.phoneTitle[S.key]), unit=unitVal();
+  if(!LIVE){ S.who={assigned:false,isNodal:false}; refreshType(); return; }
+  rpc('whoAmI',{form:S.key,unit:unit,email:em?S.ans[em.id]:'',mobile:ph?S.ans[ph.id]:''}).then(function(w){ if(unitVal()!==unit) return; S.who=w; refreshType(); },function(){ S.who={assigned:false,isNodal:false}; refreshType(); }); }
+function applyAuto(){ if(guided()||!(S.key==='S'||S.key==='D')) return; var R=BOOT.routes[S.key], ri=T(R.routerTitle), ti=typeItemObj(); if(!ri||!ti) return;
+  var part=partOfChoice(S.ans[ti.id]||''), sec=sectionFor();
+  if(((S.key==='S'&&part==='B')||(S.key==='D'&&part==='R')) && sec){ S.ans[ri.id]=sec; S.locked[ri.id]=true; } else { delete S.locked[ri.id]; if(!((S.key==='S'&&part==='B')||(S.key==='D'&&part==='R'))) delete S.ans[ri.id]; } }
+function stepsHtml(){ var st=S.page===0?1:(S.page==='REVIEW'?3:(S.done?4:2)); var L=['1 · Your details / विवरण','2 · Questions / प्रश्न','3 · Documents & submit / दस्तावेज़ एवं जमा'];
+  if(S.mode==='handwritten') L[1]='2 · Your PDF / आपका PDF';
+  return '<ol class="steps noprint">'+L.map(function(l,i){return '<li class="'+(i+1===st?'on':(i+1<st?'done':''))+'">'+l+'</li>';}).join('')+'</ol>'; }
 function modeHtml(){
   var h='<div class="q" id="w_mode"><label class="t">How will you respond? / आप उत्तर कैसे देंगे?<span class="req">*</span></label><div class="mode">';
   ['online','handwritten'].forEach(function(m){h+='<label class="opt"><input type="radio" name="mode" '+(S.mode===m?'checked ':'')+'onchange="setMode(\''+m+'\')"><span>'+esc(MODE_TXT[m])+'</span></label>';});
@@ -218,7 +269,7 @@ function render(keepScroll){
   var f=F(), p=f.pages[S.page], first=S.page===0, inv=BOOT.invitee;
   var pct=Math.round(100*(S.hist.length)/(S.hist.length+estRemaining()));
   var h='<div class="card top"><h1>'+esc(f.title)+'</h1>'+(first?'<p class="muted">'+esc(f.desc)+'</p>':'')+
-    (first&&guided()?planHtml():'')+
+    stepsHtml()+(first&&guided()?planHtml():'')+
     '<div class="prog noprint" aria-hidden="true"><i style="width:'+pct+'%"></i></div></div>';
   h+=toolsHtml();
   if(first) h+='<div class="card">'+modeHtml()+'</div>';
@@ -249,6 +300,8 @@ function estRemaining(){var n=0,pi=S.page,g=0; while(pi!=='SUBMIT'&&pi!=null&&g+
 function validate(){
   var p=F().pages[S.page], bad=null;
   if(S.page===0 && !S.mode){bad=document.getElementById('w_mode'); bad.classList.add('bad');}
+  var ti=typeItemObj();
+  if(S.page===0 && ti && autoType(ti) && S.ans[ti.id] && allowedParts().indexOf(partOfChoice(S.ans[ti.id]))<0) delete S.ans[ti.id];
   p.items.forEach(function(it){ if(!it.id||hidden(it)) return; var v=S.ans[it.id], msg='';
     var empty = v==null || v==='' || (Array.isArray(v)&&!v.length) || (it.type==='GRID'&&Object.keys(v||{}).length<it.rows.length);
     if(required(it) && empty) msg = it.type==='GRID'?'Please rate every row. / कृपया प्रत्येक पंक्ति का आकलन करें।':'This question is required. / यह प्रश्न अनिवार्य है।';
@@ -259,7 +312,7 @@ function validate(){
   if(bad){bad.scrollIntoView({behavior:'smooth',block:'center'}); var el=bad.querySelector('input,textarea,select'); if(el)el.focus({preventScroll:true});}
   return !bad;
 }
-function next(){ if(!validate()) return; var n=nextOf(S.page); S.hist.push(S.page); S.intro=null;
+function next(){ if(!validate()) return; if(S.page===0) applyAuto(); var n=nextOf(S.page); S.hist.push(S.page); S.intro=null;
   while(skippable(n)){ S.hist.push(n); S.intro=F().pages[n]; n=nextOf(n); }
   if(n==='SUBMIT'){ S.page='REVIEW'; autosave(); review(); return; }
   S.page=n; autosave(); render(); }
@@ -412,7 +465,7 @@ function reviewHtml(){
 function docTypes(){return BOOT.docTypes[S.key];}
 function review(){
   var f=F(), hand=S.mode==='handwritten', dts=docTypes();
-  var h='<div class="card top"><h1>'+esc(f.title)+'</h1><p class="muted">Attach documents, check your answers, then submit. / दस्तावेज़ संलग्न करें, उत्तर जाँचें, फिर जमा करें।</p></div>';
+  var h='<div class="card top"><h1>'+esc(f.title)+'</h1><p class="muted">Attach documents, check your answers, then submit. / दस्तावेज़ संलग्न करें, उत्तर जाँचें, फिर जमा करें।</p>'+stepsHtml()+'</div>';
   if(hand) h+=pqHtml();
   h+='<div class="card noprint" id="docs"><h2>'+(hand?'<span class="step"><b class="n">2</b><span>':'')+(hand?'Upload your handwritten response / हस्तलिखित उत्तर अपलोड करें<span class="req">*</span></span></span>':'Supporting documents (optional) / सहायक दस्तावेज़ (वैकल्पिक)')+'</h2>'+
     (hand?'<p class="muted">Photograph every page in good light, flat and readable, or upload one scanned PDF. Photos are reduced in size automatically. / प्रत्येक पृष्ठ की स्पष्ट फोटो लें या एक स्कैन PDF अपलोड करें। फोटो का आकार स्वतः कम किया जाता है।</p>':'')+
@@ -465,7 +518,7 @@ function addFiles(input,kind){
   });
 }
 function payload(){
-  var f=F(), out={form:S.key, mode:S.mode, path:S.hist.slice(), values:{}, sid:S.sid, code:S.mode==='handwritten'?qcode():'', voice:Object.keys(S.voice||{}), inviteeId:BOOT.invitee?BOOT.invitee.id:'', hp:(document.getElementById('hp')||{}).value||'',
+  var f=F(), out={form:S.key, mode:S.mode, path:S.hist.slice(), values:{}, sid:S.sid, code:S.mode==='handwritten'?qcode():'', voice:Object.keys(S.voice||{}), selfNodal:!!S.selfNodal, inviteeId:BOOT.invitee?BOOT.invitee.id:'', hp:(document.getElementById('hp')||{}).value||'',
     files:S.files.filter(function(x){return x.state==='done';}).map(function(x){return {id:x.id,docType:x.docType};})};
   S.hist.forEach(function(pi){ f.pages[pi].items.forEach(function(it){ if(it.id && S.ans[it.id]!=null && !(S.mode==='handwritten'&&it.type==='PARA')) out.values[it.id]=S.ans[it.id]; }); });
   return out;
