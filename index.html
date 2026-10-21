@@ -74,6 +74,8 @@ button:disabled{opacity:.55;cursor:wait}
 .plan{margin:8px 0 0;padding-left:20px}.plan li{margin:2px 0}.plan .now{font-weight:700}.plan .ok{color:var(--ok)}
 .lock{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--soft);border-radius:6px;padding:10px 12px}
 .inv{background:var(--soft);border-radius:8px;padding:10px 12px;font-size:.92rem;margin-top:10px}
+.parts{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}.parts li{background:var(--soft);border-radius:6px;padding:8px 10px;font-size:.92rem}.parts li b{color:var(--ok)}
+.revnote{background:var(--warnbg);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:.92rem;white-space:pre-line}
 .docs{margin:6px 0 12px;padding-left:18px;font-size:.9rem}
 .docs li{margin:3px 0}
 .flist{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px}
@@ -117,7 +119,7 @@ function F(){return SPEC.forms[FORMS[S.key]];}
 function store(k,v){try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 function load(k){try{ var v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){return null;} }
 function dkey(){return 't4draft_'+S.key+(BOOT.invitee?'_'+BOOT.invitee.id+'_'+(S.task||0):'');}
-var saveT; function autosave(){clearTimeout(saveT); saveT=setTimeout(function(){ if(!S.done) store(dkey(),{page:S.page,hist:S.hist,ans:S.ans,mode:S.mode,at:Date.now()}); },400);}
+var saveT; function autosave(){clearTimeout(saveT); saveT=setTimeout(function(){ if(!S.done) store(dkey(),{page:S.page,hist:S.hist,ans:S.ans,mode:S.mode,parts:S.parts,selfNodal:S.selfNodal,at:Date.now()}); },400);}
 function sid(){var a='abcdefghijklmnopqrstuvwxyz0123456789',s='';for(var i=0;i<24;i++)s+=a[Math.floor(Math.random()*36)];return s;}
 function findTitle(t){var f=F();for(var p=0;p<f.pages.length;p++)for(var i=0;i<f.pages[p].items.length;i++)if(f.pages[p].items[i].title===t)return f.pages[p].items[i];}
 function findItem(id){var f=F();for(var p=0;p<f.pages.length;p++)for(var i=0;i<f.pages[p].items.length;i++)if(f.pages[p].items[i].id===id)return f.pages[p].items[i];}
@@ -125,7 +127,7 @@ function findItem(id){var f=F();for(var p=0;p<f.pages.length;p++)for(var i=0;i<f
 function landing(){
   app.innerHTML = '<div class="card top"><h1>Theme 4 — Early Intervention and Reduction of Disability Burden<br>विषय 4 — प्रारंभिक हस्तक्षेप एवं दिव्यांगता भार में कमी</h1>'+
   '<p class="muted">Social Justice and Empowerment of Persons with Disabilities Department, Government of Madhya Pradesh · Departmental Summit, MoSJE, October 2026. Last date: '+esc(BOOT.config.deadline)+'.</p></div>'+
-  '<div class="card"><h2>Choose your form / अपना प्रपत्र चुनें</h2><div class="choose">'+
+  '<div class="card"><h2>Who are you? / आप कौन हैं?</h2><p class="muted small">You fill <b>one form only</b>. After you enter your department or district and designation, it opens all the questions that apply to you. / आपको <b>केवल एक फ़ॉर्म</b> भरना है — विवरण भरते ही आपसे संबंधित सभी प्रश्न खुल जाएँगे।</p><div class="choose">'+
   '<button onclick="start(\'S\')"><b>Format S — State-level officials</b>प्रारूप S — राज्य स्तरीय अधिकारी</button>'+
   '<button onclick="start(\'D\')"><b>Format D — District-level officials</b>प्रारूप D — जिला स्तरीय अधिकारी</button>'+
   '<button onclick="start(\'P\')"><b>Partner input sheet — NGOs, hospitals and other organisations</b>भागीदार इनपुट शीट — स्वयंसेवी संस्थाएँ, अस्पताल एवं अन्य संगठन</button>'+
@@ -141,39 +143,44 @@ function prefill(){
   put(fl.desig,inv.desig); put(fl.email,inv.email);
 }
 function guided(){return !!(BOOT.invitee && BOOT.invitee.form===S.key && BOOT.invitee.plan && BOOT.invitee.plan.length);}
-function task(){return guided()?BOOT.invitee.plan[S.task]:null;}
+function task(){return null;}
 function routerItem(title){return title?findTitle(title):null;}
-function applyTask(){ var t=task(); S.locked={}; if(!t) return; var R=BOOT.invitee.routers;
-  var ti=routerItem(R.type); if(ti&&t.type){S.ans[ti.id]=t.type;S.locked[ti.id]=true;}
-  var si=routerItem(R.section); if(si){ if(t.section){S.ans[si.id]=t.section;S.locked[si.id]=true;} else delete S.ans[si.id]; } }
-function unlock(){S.locked={};S.unlocked=true;render(true);}
-function firstPending(){ if(!guided()) return 0; var got=(BOOT.invitee.received||[]).slice(), pl=BOOT.invitee.plan;
-  for(var i=0;i<pl.length;i++){var j=got.indexOf(pl[i].part); if(j>-1){got.splice(j,1);pl[i].doneBefore=true;} else return i;} return 0; }
+/** Personal link: everything still requested from this person goes into one form (all of it again when a revision is asked for). */
+function applyTask(){ S.locked={}; if(!guided()) return; var inv=BOOT.invitee, R=inv.routers||{}, pl=inv.plan, got=inv.received||[], m=partStart();
+  var todo=pl.filter(function(t){return got.indexOf(t.part)<0;}); if(!todo.length||inv.revise) todo=pl.slice();
+  S.gparts=todo.map(function(t){return t.part;}).sort(function(a,b){return (m[a]||0)-(m[b]||0);});
+  var ti=routerItem(R.type); if(ti){ S.ans[ti.id]=comboLabel(S.gparts); S.locked[ti.id]=true; }
+  var st=todo.filter(function(t){return t.section;})[0], si=routerItem(R.section);
+  if(si){ if(st){S.ans[si.id]=st.section;S.locked[si.id]=true;} else if(!todo.some(function(t){return t.needsChoice;})) delete S.ans[si.id]; }
+  S.parts=S.gparts; }
+function unlock(){ var ti=typeItemObj(); Object.keys(S.locked).forEach(function(k){ if(!ti||k!==ti.id) delete S.locked[k]; }); S.unlocked=true; render(true); }
+function firstPending(){ return 0; }
 function start(k,keep){
   var prev=S||{};
-  S={key:k,page:0,hist:[],ans:{},mode:null,done:false,sid:sid(),files:[],voice:{},who:null,selfNodal:false,task:0,locked:{},unlocked:false,sent:prev.key===k?(prev.sent||[]):[]};
-  if(keep){ S.task=keep.task; S.ans=keep.ans; S.mode=keep.mode; } else if(guided()) S.task=firstPending();
-  var d=load(dkey());
+  S={key:k,page:0,hist:[],ans:{},mode:null,done:false,sid:sid(),files:[],voice:{},who:null,selfNodal:false,task:0,locked:{},unlocked:false,parts:[],sent:prev.key===k?(prev.sent||[]):[]};
+  if(keep){ S.ans=keep.ans; S.mode=keep.mode; }
+  var d=load(dkey()), rev=guided()&&BOOT.invitee.revise, usedDraft=false;
   if(d && d.ans && Object.keys(d.ans).length){
     if(confirm('A saved draft of this form was found on this device. Continue from it?\nइस उपकरण पर इस प्रपत्र का सहेजा गया मसौदा मिला है। क्या आप वहीं से जारी रखना चाहेंगे?')){
-      S.page=d.page||0;S.hist=d.hist||[];S.ans=d.ans;S.mode=d.mode||null; if(S.page==='REVIEW'){S.page=S.hist.pop()||0;}
+      S.page=d.page||0;S.hist=d.hist||[];S.ans=d.ans;S.mode=d.mode||null;S.parts=d.parts||[];S.selfNodal=!!d.selfNodal;usedDraft=true; if(S.page==='REVIEW'){S.page=S.hist.pop()||0;}
     } else store(dkey(),null);
   }
-  prefill(); applyTask(); render(); if(!guided() && (k==='S'||k==='D') && unitVal()) checkWho();
+  if(rev && !usedDraft) S.ans=JSON.parse(JSON.stringify(rev.values||{}));
+  prefill(); applyTask(); if(!guided()&&S.page===0) syncParts(); render(); if(!guided() && (k==='S'||k==='D') && unitVal()) checkWho();
 }
 
-function planHtml(){ var inv=BOOT.invitee, pl=inv.plan;
+function planHtml(){ var inv=BOOT.invitee, rev=inv.revise;
   return '<div class="inv">Personal link for / व्यक्तिगत लिंक: <b>'+esc([inv.name,inv.desig,inv.unit].filter(String).join(', '))+'</b>'+
-    '<div class="small" style="margin-top:6px">Requested from you / आपसे अपेक्षित:</div><ol class="plan small">'+pl.map(function(t,i){
-      var ok=t.doneBefore||S.sent.indexOf(i)>-1, now=i===S.task&&!ok;
-      return '<li class="'+(ok?'ok':now?'now':'')+'">'+esc(t.label)+(ok?' — ✓ received / प्राप्त':now?' — now / अभी':'')+'</li>';}).join('')+'</ol>'+
-    (pl.length>1?'<div class="small muted">Each part is submitted separately; after one is submitted the form opens the next. / प्रत्येक भाग अलग से जमा होगा।</div>':'')+'</div>'; }
+    '<div class="small" style="margin-top:6px">This one form contains everything requested from you / इस एक फ़ॉर्म में आपसे अपेक्षित सभी प्रश्न हैं:</div>'+partsHtml(S.parts)+
+    ((inv.received||[]).length&&!rev?'<div class="small muted" style="margin-top:6px">Already received from you / पहले प्राप्त: '+esc(inv.received.join(', '))+'</div>':'')+'</div>'+
+    (rev?'<div class="revnote"><b>Clarification requested by the Directorate / निदेशालय द्वारा स्पष्टीकरण अपेक्षित</b> (ref. '+esc(rev.ref)+'):\n'+esc(rev.note||'')+'\n<span class="small">Your earlier answers are filled in below. Please complete or correct them and submit again. / आपके पिछले उत्तर भरे हुए हैं — संशोधित कर पुनः जमा करें।</span></div>':''); }
 function hidden(it){ return S.mode==='handwritten' && S.page===0 && it.type==='PARA'; }
 function required(it){ return it.req && !(S.mode==='handwritten' && it.type==='PARA'); }
 function itemHtml(it){
   if(hidden(it)) return '';
   if(it.type==='HDR') return '<div class="q"><h3>'+esc(it.title)+'</h3>'+(it.help?'<div class="help">'+esc(it.help)+'</div>':'')+'</div>';
   var v=S.ans[it.id], id=it.id, h='<div class="q" id="w_'+id+'">';
+  if(guided() && it.title===BOOT.typeTitle) return h+'<label class="t">Questions in your form / आपके फ़ॉर्म के प्रश्न</label><div class="lock"><span>✓ <b>'+esc((S.parts||[]).map(function(p){return p==='A'?'Part A':p==='R'?'Part B — role section':p==='P'?'Partner sheet':'Part B — consolidated reply';}).join(' + '))+'</b><br><span class="small muted">As listed at the top of this page, from your invitation. / ऊपर दी गई सूची के अनुसार।</span></span></div></div>';
   if(S.locked[id]) return h+'<label class="t">'+esc(it.title)+'</label><div class="lock"><span>✓ <b>'+esc(v)+'</b><br><span class="small muted">'+(guided()?'Selected from your invitation / आपके आमंत्रण के अनुसार चयनित':'Selected automatically from your department / designation / आपके विभाग/पदनाम के अनुसार स्वतः चयनित')+'</span></span>'+
     '<button class="sec x" onclick="unlock()">Change / बदलें</button></div></div>';
   if(autoType(it)) return typeHtml(it);
@@ -224,23 +231,38 @@ function sectionFor(){ var R=BOOT.routes&&BOOT.routes[S.key]; if(!R) return null
   for(var i=0;i<R.map.length&&!code;i++){ var k=R.map[i][0].toLowerCase(); if(R.key==='unit'?src.indexOf(k)===0:src.indexOf(k)>-1) code=R.map[i][1]; }
   var ri=T(R.routerTitle); if(!code||!ri) return null; return ri.choices.filter(function(c){return c.indexOf(code)===0;})[0]||null; }
 function nodalOK(){ var w=S.who; return !!(w && (w.isNodal || (!w.assigned && S.selfNodal))); }
-function allowedParts(){ var p=['A']; if(S.key==='D' && (sectionFor()||!BOOT.routes)) p.push('R'); if(nodalOK()) p.push(S.key==='S'?'B':'C'); return p; }
 function readyForType(){ return S.key==='S' ? !!unitVal() : (!!unitVal() && !!desigVal()); }
+// ---- One form per officer: the parts that apply are answered one after the other and submitted once ----
+var PSTART=null;
+function partStart(){ if(PSTART&&PSTART.k===S.key) return PSTART.m; var ti=typeItemObj(), m={};
+  if(ti&&ti.nav) ti.choices.forEach(function(c,i){ var p=partOfChoice(c); if(p!=='?') m[p]=ti.nav[i]; }); PSTART={k:S.key,m:m}; return m; }
+function partOfPage(pi){ var m=partStart(), best=null, bs=-1; Object.keys(m).forEach(function(p){ if(m[p]<=pi&&m[p]>bs){bs=m[p];best=p;} }); return best; }
+function comboLabel(parts){ var C=BOOT.combo||{A:'Part A — individual feedback note',B:'Part B — consolidated departmental reply',R:'Part B — role section',C:'Part B — consolidated district reply'};
+  return parts.map(function(p){return C[p]||p;}).join(' + '); }
+function myParts(){ if(S.key==='P') return ['P']; if(guided()) return S.gparts||[]; if(!readyForType()) return [];
+  var p=['A']; if(S.key==='S'){ if(nodalOK()) p.push('B'); } else { if(sectionFor()||!BOOT.routes) p.push('R'); if(nodalOK()) p.push('C'); }
+  var m=partStart(); return p.sort(function(a,b){return (m[a]||0)-(m[b]||0);}); }
+function syncParts(){ if(S.key==='P'){S.parts=['P'];return;} var ti=typeItemObj(); S.parts=myParts(); if(ti){ if(S.parts.length) S.ans[ti.id]=comboLabel(S.parts); else delete S.ans[ti.id]; } }
+function partText(p){ var ti=typeItemObj(); var c=ti&&ti.choices.filter(function(x){return partOfChoice(x)===p;})[0]; return c||comboLabel([p]); }
+function partsHtml(parts){ if(!parts||!parts.length) return '';
+  return '<ul class="parts">'+parts.map(function(p){ var extra='';
+    if(p==='B'||p==='R'){ var R=BOOT.routes&&BOOT.routes[S.key], ri=R&&T(R.routerTitle), sec=(ri&&S.locked[ri.id]&&S.ans[ri.id])||(!guided()&&sectionFor())||null;
+      extra=sec?(/^No dedicated/.test(sec)?'<br><span class="small muted">→ common questions for all departments</span>':'<br><span class="small muted">→ '+esc(sec.split(' / ')[0])+'</span>'):'<br><span class="small muted">→ you choose your section on the next screen</span>'; }
+    if(p==='C') extra='<br><span class="small muted">→ B.1 Overview, B.8 Partnerships, B.9 District data, B.10 Case study</span>';
+    return '<li><b>✓</b> '+esc(partText(p))+extra+'</li>'; }).join('')+'</ul>'; }
 function typeHtml(it){
-  var id=it.id, unitShort=String(unitVal()).split(' / ')[0], h='<div class="q" id="w_'+id+'"><label class="t">'+esc(it.title)+'<span class="req">*</span></label>';
-  if(!readyForType()){ return h+'<div class="nbox">'+(S.key==='S'?'First choose your department above. / पहले ऊपर अपना विभाग चुनें।':'First choose your district and designation above. / पहले ऊपर अपना जिला एवं पदनाम चुनें।')+'</div><div class="err" id="e_'+id+'"></div></div>'; }
-  var ok=allowedParts(); if(S.ans[id] && ok.indexOf(partOfChoice(S.ans[id]))<0) delete S.ans[id];
-  h+='<div class="help">Only the options that apply to you are shown. / केवल आपसे संबंधित विकल्प दिखाए गए हैं।</div>';
-  it.choices.forEach(function(c,i){ if(ok.indexOf(partOfChoice(c))<0) return; var sec=partOfChoice(c)==='R'||partOfChoice(c)==='B'?sectionFor():null;
-    h+='<label class="opt"><input type="radio" name="'+id+'" '+(S.ans[id]===c?'checked ':'')+'onchange="pick(\''+id+'\','+i+',false,true)"><span>'+esc(c)+(sec?'<br><span class="small muted">→ opens '+esc(sec.split(' / ')[0])+'</span>':(partOfChoice(c)==='B'?'<br><span class="small muted">→ opens the common questions (no dedicated section)</span>':''))+'</span></label>'; });
+  var id=it.id, unitShort=String(unitVal()).split(' / ')[0], h='<div class="q" id="w_'+id+'"><label class="t">Questions in your form / आपके फ़ॉर्म के प्रश्न<span class="req">*</span></label>';
+  if(!readyForType()){ return h+'<div class="nbox">'+(S.key==='S'?'First choose your department above — the form then shows all the questions that apply to you. / पहले ऊपर अपना विभाग चुनें।':'First choose your district and designation above — the form then shows all the questions that apply to you. / पहले ऊपर अपना जिला एवं पदनाम चुनें।')+'</div><div class="err" id="e_'+id+'"></div></div>'; }
+  var parts=myParts();
+  h+='<div class="help">Worked out from your '+(S.key==='S'?'department':'designation')+'. You answer all of it in this one form and submit once. / आपके '+(S.key==='S'?'विभाग':'पदनाम')+' के अनुसार — सभी प्रश्न इसी एक फ़ॉर्म में, एक बार जमा।</div>'+partsHtml(parts);
   var w=S.who, cons=S.key==='S'?'Part B consolidated departmental reply':'consolidated district reply';
   if(!w) h+='<div class="nbox">Checking who the nodal officer is… / नोडल अधिकारी की जानकारी देखी जा रही है…</div>';
-  else if(w.isNodal) h+='<div class="nbox">✓ You are the designated nodal officer for <b>'+esc(unitShort)+'</b> and can submit the '+cons+'. / आप नामित नोडल अधिकारी हैं।</div>';
-  else if(w.assigned) h+='<div class="nbox warn">The '+cons+' for <b>'+esc(unitShort)+'</b> is submitted by the designated nodal officer ('+esc(String(w.desig||'').split(' / ')[0])+'). You can submit Part A'+(S.key==='D'&&sectionFor()?' and your role section':'')+'. If you are the nodal officer, enter the official e-mail or mobile registered with the Directorate. / समेकित उत्तर नामित नोडल अधिकारी द्वारा दिया जाएगा।</div>';
-  else h+='<div class="nbox warn">No nodal officer has been registered yet for <b>'+esc(unitShort)+'</b>.<label class="opt" style="margin-top:8px;background:var(--card)"><input type="checkbox" '+(S.selfNodal?'checked ':'')+'onchange="S.selfNodal=this.checked;refreshType()"><span>I am the nodal officer designated for the '+cons+' of '+esc(unitShort)+'. / मैं '+esc(unitShort)+' के समेकित उत्तर हेतु नामित नोडल अधिकारी हूँ।</span></label></div>';
+  else if(w.isNodal) h+='<div class="nbox">✓ You are the designated nodal officer for <b>'+esc(unitShort)+'</b>, so the '+cons+' is included in your form. / आप नामित नोडल अधिकारी हैं — समेकित उत्तर आपके फ़ॉर्म में शामिल है।</div>';
+  else if(w.assigned) h+='<div class="nbox warn">The '+cons+' for <b>'+esc(unitShort)+'</b> is given by the designated nodal officer ('+esc(String(w.desig||'').split(' / ')[0])+'). If you are the nodal officer, enter the official e-mail or mobile registered with the Directorate above. / समेकित उत्तर नामित नोडल अधिकारी द्वारा दिया जाएगा।</div>';
+  else h+='<div class="nbox warn">No nodal officer has been registered yet for <b>'+esc(unitShort)+'</b>.<label class="opt" style="margin-top:8px;background:var(--card)"><input type="checkbox" '+(S.selfNodal?'checked ':'')+'onchange="S.selfNodal=this.checked;refreshType()"><span>I am the nodal officer designated for the '+cons+' of '+esc(unitShort)+' — add it to my form. / मैं '+esc(unitShort)+' के समेकित उत्तर हेतु नामित नोडल अधिकारी हूँ।</span></label></div>';
   return h+'<div class="err" id="e_'+id+'"></div></div>';
 }
-function refreshType(){ var it=typeItemObj(); if(!it||!autoType(it)) return; var el=document.getElementById('w_'+it.id); if(el) el.outerHTML=typeHtml(it); }
+function refreshType(){ var it=typeItemObj(); if(!it||!autoType(it)||S.page!==0) return; syncParts(); var el=document.getElementById('w_'+it.id); if(el) el.outerHTML=typeHtml(it); }
 var whoT; function watch(id){
   if(S.page!==0 || guided() || !(S.key==='S'||S.key==='D')) return;
   var F0=BOOT.fields[S.key], t=findItem(id).title;
@@ -251,9 +273,9 @@ var whoT; function watch(id){
 function checkWho(){ if(!unitVal()) return; var em=T(BOOT.fields[S.key].email), ph=T(BOOT.phoneTitle&&BOOT.phoneTitle[S.key]), unit=unitVal();
   if(!LIVE){ S.who={assigned:false,isNodal:false}; refreshType(); return; }
   rpc('whoAmI',{form:S.key,unit:unit,email:em?S.ans[em.id]:'',mobile:ph?S.ans[ph.id]:''}).then(function(w){ if(unitVal()!==unit) return; S.who=w; refreshType(); },function(){ S.who={assigned:false,isNodal:false}; refreshType(); }); }
-function applyAuto(){ if(guided()||!(S.key==='S'||S.key==='D')) return; var R=BOOT.routes&&BOOT.routes[S.key]; if(!R) return; var ri=T(R.routerTitle), ti=typeItemObj(); if(!ri||!ti) return;
-  var part=partOfChoice(S.ans[ti.id]||''), sec=sectionFor();
-  if(((S.key==='S'&&part==='B')||(S.key==='D'&&part==='R')) && sec){ S.ans[ri.id]=sec; S.locked[ri.id]=true; } else { delete S.locked[ri.id]; if(!((S.key==='S'&&part==='B')||(S.key==='D'&&part==='R'))) delete S.ans[ri.id]; } }
+function applyAuto(){ if(S.key==='P'){S.parts=['P'];return;} if(guided()) return; syncParts(); var R=BOOT.routes&&BOOT.routes[S.key]; if(!R) return; var ri=T(R.routerTitle); if(!ri) return;
+  var needSec=S.parts.indexOf(S.key==='S'?'B':'R')>-1, sec=sectionFor();
+  if(needSec&&sec){ S.ans[ri.id]=sec; S.locked[ri.id]=true; } else { delete S.locked[ri.id]; if(!needSec) delete S.ans[ri.id]; } }
 function stepsHtml(){ var st=S.page===0?1:(S.page==='REVIEW'?3:(S.done?4:2)); var L=['1 · Your details / विवरण','2 · Questions / प्रश्न','3 · Documents & submit / दस्तावेज़ एवं जमा'];
   if(S.mode==='handwritten') L[1]='2 · Your PDF / आपका PDF';
   return '<ol class="steps noprint">'+L.map(function(l,i){return '<li class="'+(i+1===st?'on':(i+1<st?'done':''))+'">'+l+'</li>';}).join('')+'</ol>'; }
@@ -261,8 +283,8 @@ function modeHtml(){
   var h='<div class="q" id="w_mode"><label class="t">How will you respond? / आप उत्तर कैसे देंगे?<span class="req">*</span></label><div class="mode">';
   ['online','handwritten'].forEach(function(m){h+='<label class="opt"><input type="radio" name="mode" '+(S.mode===m?'checked ':'')+'onchange="setMode(\''+m+'\')"><span>'+esc(MODE_TXT[m])+'</span></label>';});
   h+='</div><div class="err">Please choose one. / कृपया एक विकल्प चुनें।</div>';
-  if(S.mode==='handwritten') h+='<div class="note" style="margin-top:10px">1. Fill your details and choose your part on this page'+(F().pages.some(function(p,i){return i>0&&routerPage(i);})?' (and your section on the next screen)':'')+'. 2. You then get a PDF with only your questions, your details and a code. 3. Print it, write and sign, and upload photographs or a scan at the same link. / '+
-    '1. इस पृष्ठ पर विवरण भरें एवं भाग चुनें। 2. फिर आपको केवल आपके प्रश्नों वाला PDF मिलेगा। 3. प्रिंट कर हाथ से लिखें, हस्ताक्षर करें और उसी लिंक पर फोटो/स्कैन अपलोड करें।</div>';
+  if(S.mode==='handwritten') h+='<div class="note" style="margin-top:10px">1. Fill your details on this page. 2. You then get <b>one PDF</b> with all the questions that apply to you (Part A and, where applicable, your Part B), your details and a code. 3. Print it, write and sign, and upload photographs or a scan at the same link, with any supporting documents. / '+
+    '1. इस पृष्ठ पर अपना विवरण भरें। 2. फिर आपको आपसे संबंधित सभी प्रश्नों वाला <b>एक PDF</b> मिलेगा। 3. प्रिंट कर हाथ से लिखें, हस्ताक्षर करें और उसी लिंक पर फोटो/स्कैन एवं सहायक दस्तावेज़ अपलोड करें।</div>';
   return h+'</div>';
 }
 function render(keepScroll){
@@ -286,10 +308,17 @@ function skippable(pi){ if(typeof pi!=='number') return false; var its=F().pages
   return its.length>0 && its.every(function(i){return S.locked[i.id];}); }
 function routerPage(pi){ if(typeof pi!=='number') return false; var its=F().pages[pi].items.filter(function(i){return i.type!=='HDR';});
   return its.length>0 && its.every(function(i){return i.nav;}); }
+function flowNext(pi){
+  if(S.key==='P'||!typeItemObj()) return typedNext(pi);
+  var parts=S.parts||[], m=partStart();
+  if(pi===0) return parts.length?m[parts[0]]:null;
+  var n=typedNext(pi);
+  if(n==='SUBMIT'){ var k=parts.indexOf(partOfPage(pi)); n=(k>-1&&k+1<parts.length)?m[parts[k+1]]:'SUBMIT'; }
+  return n; }
 function nextOf(pi){
-  if(S.mode==='handwritten'){ var n=typedNext(pi), g=0; while(typeof n==='number' && !routerPage(n) && g++<30) n=typedNext(n); return n; }
-  return typedNext(pi); }
-function route(){ var pages=[0], pi=0, g=0; while(g++<30){ var n=typedNext(pi); if(n==='SUBMIT'||n==null) return n==null?null:pages; pages.push(n); pi=n; } return pages; }
+  if(S.mode==='handwritten'){ var n=flowNext(pi), g=0; while(typeof n==='number' && !routerPage(n) && g++<40) n=flowNext(n); return n; }
+  return flowNext(pi); }
+function route(){ var pages=[0], pi=0, g=0; while(g++<40){ var n=flowNext(pi); if(n==='SUBMIT'||n==null) return n==null?null:pages; pages.push(n); pi=n; } return pages; }
 function typedNext(pi){
   var p=F().pages[pi];
   for(var i=0;i<p.items.length;i++){var it=p.items[i]; if(it.nav){var k=it.choices.indexOf(S.ans[it.id]); return k>-1?it.nav[k]:null;}}
@@ -301,7 +330,7 @@ function validate(){
   var p=F().pages[S.page], bad=null;
   if(S.page===0 && !S.mode){bad=document.getElementById('w_mode'); bad.classList.add('bad');}
   var ti=typeItemObj();
-  if(S.page===0 && ti && autoType(ti) && S.ans[ti.id] && allowedParts().indexOf(partOfChoice(S.ans[ti.id]))<0) delete S.ans[ti.id];
+  if(S.page===0 && ti && autoType(ti)) syncParts();
   p.items.forEach(function(it){ if(!it.id||hidden(it)) return; var v=S.ans[it.id], msg='';
     var empty = v==null || v==='' || (Array.isArray(v)&&!v.length) || (it.type==='GRID'&&Object.keys(v||{}).length<it.rows.length);
     if(required(it) && empty) msg = it.type==='GRID'?'Please rate every row. / कृपया प्रत्येक पंक्ति का आकलन करें।':'This question is required. / यह प्रश्न अनिवार्य है।';
@@ -400,17 +429,16 @@ function dictate(id){
 
 // ---- Personalised questionnaire for handwritten replies ----------------------------------------
 function qcode(){ var r=route()||[0], sec='';
-  r.forEach(function(pi){ F().pages[pi].items.forEach(function(it){ if(it.nav&&pi>0&&S.ans[it.id]){ var m=String(S.ans[it.id]).match(/^B\.(\d+)/); sec=m?'B'+m[1]:'C'; } }); });
-  var t=findTitle('Response type / उत्तर का प्रकार');
-  var part=S.key==='P'?'P':(t&&S.ans[t.id]?(/^Part A/.test(S.ans[t.id])?'A':/role/i.test(S.ans[t.id])?'R':/district/i.test(S.ans[t.id])?'C':'B'):'X');
-  return (S.key+'-'+part+(sec&&part!=='A'?'-'+sec:'')+'-'+S.sid.slice(0,6)).toUpperCase(); }
+  r.forEach(function(pi){ F().pages[pi].items.forEach(function(it){ if(it.nav&&pi>0&&S.ans[it.id]){ var m=String(S.ans[it.id]).match(/^B\.(\d+)/); sec=m?'B'+m[1]:''; } }); });
+  var part=S.key==='P'?'P':((S.parts||[]).join('')||'X');
+  return (S.key+'-'+part+(sec&&/[BR]/.test(part)?'-'+sec:'')+'-'+S.sid.slice(0,6)).toUpperCase(); }
 function pqValues(){ var r=route()||[0], v={};
   r.forEach(function(pi){ F().pages[pi].items.forEach(function(it){ if(it.id&&S.ans[it.id]!=null&&(pi===0?it.type!=='PARA':it.nav)) v[it.id]=S.ans[it.id]; }); }); return v; }
 function pqCount(){ var r=route()||[0], n=0;
   r.forEach(function(pi){ F().pages[pi].items.forEach(function(it){ if(it.id&&!it.nav&&(pi>0||it.type==='PARA')) n++; }); }); return n; }
 function pqHtml(){
   return '<div class="card noprint"><h2><span class="step"><b class="n">1</b><span>Your personalised questionnaire / आपकी व्यक्तिगत प्रश्नावली</span></span></h2>'+
-    '<p class="muted">It contains only the '+pqCount()+' questions for your part and section, with your details and the code <b>'+esc(qcode())+'</b> printed on it. Print it, write your answers, sign, then upload photographs or a scan below. / इसमें केवल आपके भाग/खंड के प्रश्न, आपका विवरण एवं कोड छपा है। प्रिंट करें, उत्तर लिखें, हस्ताक्षर करें, फिर नीचे फोटो/स्कैन अपलोड करें।</p>'+
+    '<p class="muted">One PDF with all the '+pqCount()+' questions that apply to you ('+esc((S.parts||[]).map(function(p){return p==='A'?'Part A':p==='P'?'Partner sheet':p==='R'?'Part B role section':'Part B consolidated';}).join(' + '))+'), with your details and the code <b>'+esc(qcode())+'</b> printed on it. Print it, write your answers, sign, then upload photographs or a scan below. / इसमें केवल आपके भाग/खंड के प्रश्न, आपका विवरण एवं कोड छपा है। प्रिंट करें, उत्तर लिखें, हस्ताक्षर करें, फिर नीचे फोटो/स्कैन अपलोड करें।</p>'+
     '<div class="bar" style="justify-content:flex-start"><button class="pri" id="pdfb" onclick="getPdf()">⬇ Download PDF / पीडीएफ डाउनलोड करें</button>'+
     '<button class="sec" onclick="personalPrint()">🖨 Print from the browser / ब्राउज़र से प्रिंट करें</button></div><div class="small muted" id="pdfmsg" style="margin-top:6px"></div></div>';
 }
@@ -432,7 +460,7 @@ function personalPrint(){ var r=route()||[0], f=F(), code=qcode(), v=pqValues();
     '<div class="card blank"><h1>'+esc(f.title)+'</h1><p class="small"><i>Personalised questionnaire for handwritten reply / हस्तलिखित उत्तर हेतु व्यक्तिगत प्रश्नावली</i></p>'+
     '<div class="gridwrap"><table class="grid" style="margin-bottom:10px"><tr><td><b>Questionnaire code / प्रश्नावली कोड</b></td><td><b>'+esc(code)+'</b></td></tr>';
   r.forEach(function(pi){ F().pages[pi].items.forEach(function(it){ if(it.id&&v[it.id]!=null&&it.type!=='CB') h+='<tr><td><b>'+esc(it.title)+'</b></td><td>'+esc(Array.isArray(v[it.id])?v[it.id].join(', '):v[it.id])+'</td></tr>'; }); });
-  h+='</table></div><p class="small">Answer every question below. These are only the questions for your part and section. Data items: a number, or NH / NA. / नीचे दिए सभी प्रश्नों के उत्तर दें।</p>';
+  h+='</table></div><p class="small">Answer every question below. These are all the questions that apply to you, in one questionnaire. Data items: a number, or NH / NA. / नीचे दिए सभी प्रश्नों के उत्तर दें।</p>';
   r.forEach(function(pi){ var p=f.pages[pi], its=p.items.filter(function(it){return !(pi===0&&it.type!=='PARA'&&it.type!=='HDR')&&!it.nav;});
     if(!its.some(function(i){return i.type!=='HDR';})) return;
     h+='<h2>'+esc(p.title||'Questions / प्रश्न')+'</h2>'+(p.help?'<p class="small muted">'+esc(p.help)+'</p>':'');
@@ -534,8 +562,7 @@ function submitAll(){
   rpc('submitResponse',p).then(function(r){done(r.ref);},function(e){b.disabled=false;b.textContent='Submit / जमा करें';
       alert('The response could not be saved. Your draft is kept on this device — please try again.\nउत्तर सहेजा नहीं जा सका। आपका मसौदा इस उपकरण पर सुरक्षित है — कृपया पुनः प्रयास करें।\n\n'+(e&&e.message||e));});
 }
-function nextTaskIndex(){ if(!guided()) return -1; var pl=BOOT.invitee.plan;
-  for(var i=0;i<pl.length;i++) if(!pl[i].doneBefore && S.sent.indexOf(i)<0) return i; return -1; }
+function nextTaskIndex(){ return -1; }
 function continueNext(){ var i=nextTaskIndex(); if(i<0) return; var keep={}, p0=F().pages[0], R=BOOT.invitee.routers;
   p0.items.forEach(function(it){ if(it.id && S.ans[it.id]!=null && it.title!==R.type) keep[it.id]=S.ans[it.id]; });
   start(S.key,{task:i,ans:keep,mode:S.mode}); }
@@ -546,9 +573,9 @@ function done(ref){
     '</div><p><b>Reference no. / संदर्भ क्रमांक:</b> '+esc(ref)+'<br><span class="small muted">'+new Date().toLocaleString('en-IN')+'</span></p>'+
     (ni>-1?'<div class="note noprint" style="margin:10px 0"><b>Next requested part / अगला अपेक्षित भाग:</b> '+esc(BOOT.invitee.plan[ni].label)+
       '<div style="margin-top:8px"><button class="pri" onclick="continueNext()">Continue to the next part / अगले भाग पर जाएँ →</button></div><div class="small muted" style="margin-top:6px">Your officer details are carried over. / आपका विवरण साथ रहेगा।</div></div>':
-      (guided()?'<div class="okbox" style="margin:10px 0">All parts requested from you have been received. / आपसे अपेक्षित सभी भाग प्राप्त हो गए हैं।</div>':''))+
+      (guided()?'<div class="okbox" style="margin:10px 0">Everything requested from you has been received in this one response. / आपसे अपेक्षित सभी उत्तर इस एक प्रविष्टि में प्राप्त हो गए हैं।</div>':''))+
     '<div class="bar noprint"><button class="sec" onclick="window.print()">Print or save a copy (PDF) / प्रति प्रिंट करें</button>'+
-    '<button class="sec" onclick="'+(START?'start(S.key)':'landing()')+'">Submit another response / एक और उत्तर</button></div></div>'+
+    '<button class="sec" onclick="'+(START?'start(S.key)':'landing()')+'">Submit a response for another officer / अन्य अधिकारी का उत्तर</button></div></div>'+
     '<div class="card rev">'+reviewHtml()+'</div>';
   window.scrollTo(0,0);
 }
